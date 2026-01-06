@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+coverage/
+output/*.mp4
+temp/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
