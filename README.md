@@ -78,23 +78,32 @@ npx playwright install chromium
 
 1. **Add your animation** to the `animations/` directory (see "Where to Add Animations" below)
 
-2. **Convert the example animation:**
+2. **Convert the example animations:**
    ```bash
+   # Convert bouncing balls animation
    npm run convert:pipeline -- animations/example-animation output/demo.mp4 --fps 30 --duration 5 --quality high
+   
+   # Convert beach ball animation
+   npm run convert:pipeline -- animations/beach-ball output/beach-ball.mp4 --fps 30 --duration 5
+   
+   # Convert pulsing circles animation
+   npm run convert:pipeline -- animations/pulse-circles output/pulse.mp4 --fps 30 --duration 5
    ```
 
-3. **Output file:** `output/demo.mp4`
+3. **Output files:** Check the `output/` directory for generated MP4 files
 
 ## Project Structure
 
 ```
 infinte-asset/
 ├── animations/              # YOUR ANIMATIONS GO HERE
-│   ├── example-animation/   # Included example
+│   ├── example-animation/   # Bouncing balls on canvas
 │   │   └── index.jsx
-│   ├── my-animation-1/      # Your custom animation
+│   ├── beach-ball/          # Beach ball with bouncing animation
 │   │   └── index.jsx
-│   └── my-animation-2/      # Another custom animation
+│   ├── pulse-circles/       # Pulsing circles animation
+│   │   └── index.jsx
+│   └── my-animation/        # Your custom animation
 │       └── index.jsx
 ├── scripts/                 # Build and conversion scripts
 │   ├── stages/              # Conversion pipeline stages
@@ -111,6 +120,19 @@ infinte-asset/
 ├── tsconfig.json
 ├── jest.config.js
 └── README.md
+```
+
+**Included Example Animations:**
+
+| Animation | Description | Technique |
+|-----------|-------------|-----------|
+| `example-animation` | Bouncing colored balls | Canvas API |
+| `beach-ball` | Beach ball bouncing on sand | SVG + CSS animations |
+| `pulse-circles` | Pulsing colored circles | Canvas API |
+
+**To convert any animation:**
+```bash
+npm run convert:pipeline -- animations/<name> output/video.mp4
 ```
 
 **Key directories:**
@@ -166,14 +188,28 @@ animations/
 
 ```
 animations/
-├── example-animation/          # Included example
+├── example-animation/          # Bouncing balls (canvas-based)
 │   └── index.jsx
-├── my-bouncing-balls/          # Your custom animation
-│   ├── index.jsx
-│   └── assets/
-│       └── image.png           # Optional assets
-└── another-animation/          # Another example
-    └── index.jsx
+├── beach-ball/                 # Beach ball with sand and sky (SVG + CSS)
+│   └── index.jsx
+├── pulse-circles/              # Pulsing circles (canvas-based)
+│   └── index.jsx
+└── my-animation/               # Your custom animation
+    ├── index.jsx
+    └── assets/
+        └── image.png           # Optional assets
+```
+animations/
+├── example-animation/          # Canvas-based bouncing balls
+│   └── index.jsx
+├── beach-ball/                 # SVG beach ball with CSS animations
+│   └── index.jsx
+├── pulse-circles/              # Canvas-based pulsing circles
+│   └── index.jsx
+└── my-animation/               # Your custom animation
+    ├── index.jsx
+    └── assets/
+        └── image.png           # Optional assets
 ```
 
 ### Animation Code Guidelines
@@ -186,13 +222,42 @@ export function BouncingBalls() {
   const canvasRef = useRef(null)
   
   useEffect(() => {
-    // Canvas animation code
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    
+    function animate() {
+      ctx.fillStyle = '#1a1a2e'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      // Animation code
+      requestAnimationFrame(animate)
+    }
+    
+    animate()
   }, [])
   
   return <canvas ref={canvasRef} width={800} height={600} />
 }
 
 export default BouncingBalls
+```
+
+**SVG-based animations:**
+```jsx
+export function BeachBall() {
+  return (
+    <div style={{ animation: 'bounce 1s infinite' }}>
+      <svg viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="48" fill="red" />
+      </svg>
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-100px); }
+        }
+      `}</style>
+    </div>
+  )
+}
 ```
 
 **Not Supported (Node.js APIs):**
@@ -245,6 +310,83 @@ export function MyAnimation() {
 
 export default MyAnimation
 ```
+
+## Converting Existing React Projects
+
+You can convert existing React project files to MP4 video. Here's how:
+
+### Step 1: Copy Your React Files
+
+```bash
+# Copy your React project files to the animations directory
+cp /path/to/your/react-project/src/App.jsx animations/my-project/index.jsx
+```
+
+### Step 2: Adapt for Browser
+
+Your React code must be **browser-compatible**:
+
+| Supported | Not Supported |
+|-----------|---------------|
+| React hooks (`useState`, `useEffect`, `useRef`) | Node.js APIs (`fs`, `path`, `require`) |
+| Inline styles (`style={{...}}`) | CSS frameworks (Tailwind - must convert to inline) |
+| CSS animations (`@keyframes`) | CSS imports (`import './styles.css'`) |
+| SVG elements | External assets (images must be embedded or URL) |
+| Canvas API | CSS Modules |
+
+### Step 3: Convert to Browser-Compatible Format
+
+**Tailwind CSS Example:**
+```jsx
+// BEFORE (Tailwind - won't work)
+<div className="min-h-screen w-full bg-blue-500" />
+
+// AFTER (Inline styles - browser compatible)
+<div style={{ minHeight: '100vh', width: '100%', background: '#3b82f6' }} />
+```
+
+**CSS Animations Example:**
+```jsx
+// BEFORE (CSS import - won't work)
+import './styles.css'
+
+// AFTER (Embedded in style tag)
+<style>{`
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-100px); }
+  }
+`}</style>
+```
+
+### Step 4: Run Conversion
+
+```bash
+npm run convert:pipeline -- animations/my-project output/my-video.mp4 --fps 30 --duration 5
+```
+
+### Example: Converting a React Project
+
+If you have a React project at `/home/user/my-react-app/src/App.jsx`:
+
+1. **Copy and adapt the file:**
+   ```bash
+   mkdir -p animations/my-react-app
+   cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx
+   # Then convert Tailwind classes to inline styles
+   ```
+
+2. **Convert to video:**
+   ```bash
+   npm run convert:pipeline -- animations/my-react-app output/my-react-video.mp4
+   ```
+
+### Tips for Converting Complex Animations
+
+1. **Extract CSS** - Copy `@keyframes` and styles into a `<style>` tag
+2. **Convert classes** - Change `className="flex items-center"` to `style={{ display: 'flex', alignItems: 'center' }}`
+3. **Embed images** - Replace `<img src="./logo.png">` with base64 or SVG
+4. **Test in browser** - Open the generated HTML to check for errors
 
 ## Converting Animations
 
