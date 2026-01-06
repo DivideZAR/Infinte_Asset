@@ -120,8 +120,11 @@ async function generateHtml(animationDir: string, outputDir: string, config?: Pa
   
   combinedCode = stripExports(combinedCode)
   
-  const componentMatch = combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
-                        combinedCode.match(/export\s+function\s+(\w+)\s*\(/)?.[1] ||
+  const componentMatch = combinedCode.match(/export\s+default\s+function\s+(\w+)/)?.[1] ||
+                        combinedCode.match(/export\s+const\s+(\w+)\s*=/)?.[1] ||
+                        combinedCode.match(/function\s+(\w+)\s*\(\s*\{[^}]*\}\s*\)/)?.[1] ||
+                        combinedCode.match(/function\s+(\w+)\s*\(\s*props\s*\)/)?.[1] ||
+                        combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
                         'App'
   
   combinedCode += `\n\n// Auto-generated render call\nReactDOM.createRoot(document.getElementById('root')).render(React.createElement(${componentMatch}));`

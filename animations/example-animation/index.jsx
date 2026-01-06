@@ -60,9 +60,9 @@ function updateBalls(balls, width, height) {
 
 export function BouncingBalls({ ballCount = 5, backgroundColor = '#1a1a2e' }) {
   const canvasRef = useRef(null)
-  const ballsRef = React.useRef([])
-  const animationRef = React.useRef(null)
-  const dimensionsRef = React.useRef({ width: 800, height: 600 })
+  const ballsRef = useRef([])
+  const animationRef = useRef(null)
+  const dimensionsRef = useRef({ width: 800, height: 600 })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -140,7 +140,7 @@ export function BouncingBalls({ ballCount = 5, backgroundColor = '#1a1a2e' }) {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [ballsRef.current, backgroundColor])
+  }, [backgroundColor])
 
   return (
     <canvas
