@@ -40,6 +40,9 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    const { useState, useEffect, useRef, useCallback, useMemo, useContext, useReducer } = React;
+  </script>
   <script type="text/babel" data-type="module">
     {ANIMATION_CODE}
   </script>
@@ -53,13 +56,50 @@ interface HtmlResult {
 
 function stripExports(code) {
   let result = code
+  
   result = result.replace(/export\s+default\s+/g, '')
   result = result.replace(/export\s+const\s+/g, 'const ')
   result = result.replace(/export\s+function\s+/g, 'function ')
   result = result.replace(/export\s+/g, '')
-  result = result.replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '')
-  result = result.replace(/import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?/g, '')
-  result = result.replace(/import\s+React.*?;/g, '')
+  
+  const reactImports = []
+  
+  const importReactBoth = result.match(/import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/g)
+  if (importReactBoth) {
+    importReactBoth.forEach(match => {
+      const hookMatch = match.match(/import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/)
+      if (hookMatch && hookMatch[1]) {
+        const hooks = hookMatch[1].split(',').map(h => h.trim()).filter(h => h)
+        reactImports.push(...hooks)
+      }
+    })
+    result = result.replace(/import\s+React\s*,\s*\{\s*[^}]+\s*\}\s*from\s+['"]react['"];?/g, '')
+  }
+  
+  const importReactOnly = result.match(/import\s+React\s+from\s+['"]react['"];?/g)
+  if (importReactOnly) {
+    result = result.replace(/import\s+React\s+from\s+['"]react['"];?/g, '')
+  }
+  
+  const importHooksOnly = result.match(/import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]react['"];?/g)
+  if (importHooksOnly) {
+    importHooksOnly.forEach(match => {
+      const hookMatch = match.match(/import\s+\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/)
+      if (hookMatch && hookMatch[1]) {
+        const hooks = hookMatch[1].split(',').map(h => h.trim()).filter(h => h)
+        reactImports.push(...hooks)
+      }
+    })
+    result = result.replace(/import\s+\{\s*[^}]+\s*\}\s*from\s+['"]react['"];?/g, '')
+  }
+  
+  result = result.replace(/import\s+[^'"]+from\s+['"][^'"]+['"];?/g, '')
+  
+  const uniqueHooks = [...new Set(reactImports)].filter(h => h)
+  if (uniqueHooks.length > 0) {
+    result = `const { ${uniqueHooks.join(', ')} } = React;\n\n` + result
+  }
+  
   return result
 }
 
