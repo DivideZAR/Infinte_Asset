@@ -21,6 +21,7 @@
     "convert:test1": "tsx scripts/stages/pipeline.ts test 1",
     "convert:test2": "tsx scripts/stages/pipeline.ts test 2",
     "convert:test3": "tsx scripts/stages/pipeline.ts test 3",
+    "convert:tailwind": "tsx scripts/tailwind-converter.ts",
     "validate": "tsx scripts/validate.ts",
     "postinstall": "husky install"
   },

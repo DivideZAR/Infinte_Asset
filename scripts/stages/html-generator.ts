@@ -108,6 +108,14 @@ async function generateHtml(animationDir: string, outputDir: string, config?: Pa
   
   await fs.ensureDir(outputDir)
   
+  const prebuiltHtmlPath = path.join(animationDir, 'index.html')
+  if (await fs.pathExists(prebuiltHtmlPath)) {
+    const outputHtmlPath = path.join(outputDir, 'animation.html')
+    await fs.copy(prebuiltHtmlPath, outputHtmlPath)
+    console.log(`Using pre-built HTML file: ${prebuiltHtmlPath}`)
+    return { htmlPath: outputHtmlPath, config: fullConfig }
+  }
+  
   const animationFiles = await collectAnimationFiles(animationDir)
   
   let combinedCode = ''

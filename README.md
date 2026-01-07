@@ -214,57 +214,388 @@ animations/
 
 ### Animation Code Guidelines
 
-**Supported:**
+## Supported React Code
+
+When creating animations for conversion to MP4, follow these guidelines to ensure compatibility with the browser-based rendering pipeline.
+
+### Supported React Features
+
+| Feature | Example | Notes |
+|---------|---------|-------|
+| React hooks | `useState`, `useEffect`, `useRef`, `useCallback`, `useMemo` | Fully supported |
+| Functional components | `export function MyAnimation() { ... }` | Use named or default exports |
+| Canvas API | `canvas.getContext('2d')` | Render graphics with requestAnimationFrame |
+| SVG elements | `<svg><circle /></svg>` | Full SVG support with CSS styling |
+| Inline styles | `style={{ display: 'flex', color: '#ff0000' }}` | Use JavaScript object syntax |
+| CSS animations | `<style>{`@keyframes fade { ... }`}</style>` | Embed in style tags |
+| Conditional rendering | `{show && <div>...</div>}` | Supported |
+| Array.map for lists | `{items.map(item => <div key={item.id} />)}` | Include unique keys |
+
+### Supported CSS in Inline Styles
+
 ```jsx
-import React, { useState, useEffect, useRef } from 'react'
+// All these properties work in inline styles:
+style={{
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '100%',
+  height: '100vh',
+  backgroundColor: '#1a1a2e',
+  color: '#ffffff',
+  fontSize: '24px',
+  fontWeight: '600',
+  borderRadius: '12px',
+  boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+  padding: '20px',
+  margin: '10px',
+  opacity: 0.8,
+  transform: 'translateX(50px)',
+  animation: 'bounce 1s infinite',
+}}
+```
+
+### Supported CSS Animation Syntax
+
+```jsx
+export function AnimatedComponent() {
+  return (
+    <div style={{ animation: 'pulse 2s ease-in-out infinite' }}>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.5;
+            transform: scale(0.95);
+          }
+        }
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+      Content
+    </div>
+  )
+}
+```
+
+### Canvas Animation Pattern
+
+```jsx
+import React, { useRef, useEffect } from 'react'
 
 export function BouncingBalls() {
   const canvasRef = useRef(null)
-  
+
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
-    
+    let animationId
+
     function animate() {
       ctx.fillStyle = '#1a1a2e'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
-      // Animation code
-      requestAnimationFrame(animate)
+
+      // Draw animated content
+      ctx.fillStyle = '#ff6b6b'
+      ctx.beginPath()
+      ctx.arc(400, 300, 50, 0, Math.PI * 2)
+      ctx.fill()
+
+      animationId = requestAnimationFrame(animate)
     }
-    
+
     animate()
+
+    return () => {
+      cancelAnimationFrame(animationId)
+    }
   }, [])
-  
+
   return <canvas ref={canvasRef} width={800} height={600} />
 }
 
 export default BouncingBalls
 ```
 
-**SVG-based animations:**
+---
+
+## NOT Supported React Code
+
+### Node.js APIs (Do Not Use)
+
 ```jsx
-export function BeachBall() {
+// ❌ WON'T WORK - Node.js APIs
+import fs from 'fs'                    // File system access
+import path from 'path'                // Path manipulation
+import crypto from 'crypto'            // Cryptography
+import http from 'http'                // HTTP server
+import process from 'process'          // Process (limited)
+const data = require('./data')         // CommonJS require
+```
+
+### CSS Frameworks (Do Not Use Directly)
+
+```jsx
+// ❌ WON'T WORK - Tailwind CSS classes
+<div className="flex min-h-screen bg-blue-500 text-white p-4" />
+
+// ✅ INSTEAD - Use inline styles (or run through tailwind-converter)
+<div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#3b82f6', color: 'white', padding: '16px' }} />
+```
+
+### CSS Imports (Do Not Use)
+
+```jsx
+// ❌ WON'T WORK - CSS imports
+import './styles.css'
+import './App.css'
+import styles from './App.module.css'
+
+// ✅ INSTEAD - Embed CSS in style tags
+<style>{`
+  .container {
+    display: flex;
+    background: #1a1a2e;
+  }
+`}</style>
+```
+
+### External Assets Without URL
+
+```jsx
+// ❌ WON'T WORK - Local file imports
+import logo from './logo.png'
+import background from './bg.jpg'
+
+// ✅ INSTEAD - Use SVG, data URLs, or remote URLs
+<img src="https://example.com/image.png" alt="logo" />
+// Or embed SVG directly
+<svg>...</svg>
+```
+
+### CSS Modules
+
+```jsx
+// ❌ WON'T WORK - CSS Modules
+import styles from './Button.module.css'
+<button className={styles.button}>Click</button>
+
+// ✅ INSTEAD - Use inline styles or global style tags
+<button style={{ background: '#3b82f6', padding: '8px 16px' }}>Click</button>
+```
+
+### Styled Components / Emotion
+
+```jsx
+// ❌ WON'T WORK - Runtime CSS-in-JS libraries
+import styled from 'styled-components'
+const Button = styled.button`background: blue;`
+
+// ✅ INSTEAD - Use inline styles or CSS modules pattern
+const buttonStyle = { background: '#3b82f6', padding: '8px 16px' }
+<button style={buttonStyle}>Click</button>
+```
+
+---
+
+## Complete AI Code Generation Guidelines
+
+When generating React animation code, follow these rules:
+
+### ✅ DO:
+
+1. **Use React hooks for state and effects**
+   ```jsx
+   import React, { useState, useEffect, useRef } from 'react'
+   ```
+
+2. **Use inline styles with JavaScript objects**
+   ```jsx
+   style={{ display: 'flex', backgroundColor: '#1a1a2e', color: '#ffffff' }}
+   ```
+
+3. **Embed CSS animations in `<style>` tags**
+   ```jsx
+   <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } }`}</style>
+   ```
+
+4. **Use Canvas API with requestAnimationFrame**
+   ```jsx
+   const animate = () => { /* drawing code */ requestAnimationFrame(animate) }
+   ```
+
+5. **Use SVG elements with inline styles**
+   ```jsx
+   <svg><circle cx="50" cy="50" r="40" fill="#ff6b6b" /></svg>
+   ```
+
+6. **Export a single named or default function**
+   ```jsx
+   export function MyAnimation() { ... }
+   // or
+   export default function MyAnimation() { ... }
+   ```
+
+7. **Use standard HTML elements with camelCase CSS properties**
+   ```jsx
+   <div style={{ minHeight: '100vh', flexDirection: 'column' }}>
+   ```
+
+8. **Use hex colors, rgb(), or named colors**
+   ```jsx
+   style={{ backgroundColor: '#ff6b6b', color: 'rgb(255,255,255)' }}
+   ```
+
+### ❌ DO NOT:
+
+1. **Do not use Tailwind CSS classes**
+   - ❌ `className="flex min-h-screen bg-blue-500"`
+   - ✅ Use `style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#3b82f6' }}`
+   - Or run through: `npm run convert:tailwind -- input.tsx output-dir`
+
+2. **Do not import CSS files**
+   - ❌ `import './styles.css'`
+   - ✅ Use `<style>{`...css content...`}</style>`
+
+3. **Do not use Node.js modules**
+   - ❌ `import fs from 'fs'`
+   - ❌ `import path from 'path'`
+   - ❌ `require('./data')`
+
+4. **Do not use CSS Modules**
+   - ❌ `import styles from './Button.module.css'`
+   - ❌ `className={styles.button}`
+
+5. **Do not use styled-components or emotion**
+   - ❌ `import styled from 'styled-components'`
+   - ❌ `const Box = styled.div`background: blue```
+
+6. **Do not reference local image files**
+   - ❌ `import img from './logo.png'`
+   - ✅ Use remote URLs or embed SVG
+
+7. **Do not use hyphens in CSS property names**
+   - ❌ `style={{ 'min-height': '100vh' }}`
+   - ✅ Use camelCase: `style={{ minHeight: '100vh' }}`
+
+8. **Do not use `@import` in style tags**
+   - ❌ `<style>@import url('https://fonts.googleapis.com/css2?family=Roboto');</style>`
+   - ✅ Use inline styles for fonts or include font-family directly
+
+---
+
+## Quick Reference: Code Patterns
+
+### Canvas Animation
+```jsx
+import React, { useRef, useEffect } from 'react'
+
+export function CanvasAnimation() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    let frameId
+
+    const render = () => {
+      ctx.fillStyle = '#1a1a2e'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      // Draw your animation here
+      frameId = requestAnimationFrame(render)
+    }
+
+    render()
+    return () => cancelAnimationFrame(frameId)
+  }, [])
+
+  return <canvas ref={canvasRef} width={800} height={600} />
+}
+
+export default CanvasAnimation
+```
+
+### CSS Animation
+```jsx
+export function CSSAnimation() {
   return (
-    <div style={{ animation: 'bounce 1s infinite' }}>
-      <svg viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="48" fill="red" />
-      </svg>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
       <style>{`
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-100px); }
+          50% { transform: translateY(-30px); }
+        }
+        .bouncing {
+          animation: bounce 1s ease-in-out infinite;
         }
       `}</style>
+      <div className="bouncing" style={{ width: '100px', height: '100px', backgroundColor: '#ff6b6b', borderRadius: '50%' }} />
     </div>
   )
 }
 ```
 
-**Not Supported (Node.js APIs):**
+### SVG Animation
 ```jsx
-import fs from 'fs'           // Won't work in browser
-import path from 'path'       // Won't work in browser
-const data = require('./data') // Won't work in browser
+export function SVGAnimation() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
+      <svg width="200" height="200" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" fill="#4ecdc4" />
+        <circle cx="100" cy="100" r="60" fill="#ff6b6b" />
+        <circle cx="100" cy="100" r="40" fill="#ffe66d" />
+        <circle cx="100" cy="100" r="20" fill="#1a535c" />
+      </svg>
+    </div>
+  )
+}
+```
+
+### Combined Animation
+```jsx
+import React, { useState } from 'react'
+
+export function CombinedAnimation() {
+  const [rotation, setRotation] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotation(r => (r + 1) % 360)
+    }, 16)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
+      <div style={{
+        width: '150px',
+        height: '150px',
+        backgroundColor: '#ff6b6b',
+        borderRadius: '50%',
+        transform: `rotate(${rotation}deg)`,
+        boxShadow: '0 0 30px rgba(255,107,107,0.5)'
+      }} />
+    </div>
+  )
+}
 ```
 
 ## Creating Animations
@@ -336,13 +667,42 @@ Your React code must be **browser-compatible**:
 
 ### Step 3: Convert to Browser-Compatible Format
 
-**Tailwind CSS Example:**
-```jsx
-// BEFORE (Tailwind - won't work)
-<div className="min-h-screen w-full bg-blue-500" />
+**Tailwind CSS to Inline Styles Converter:**
 
-// AFTER (Inline styles - browser compatible)
-<div style={{ minHeight: '100vh', width: '100%', background: '#3b82f6' }} />
+A built-in tool converts Tailwind CSS classes to inline styles automatically:
+
+```bash
+npx tsx scripts/tailwind-converter.ts <input-path> <output-directory>
+```
+
+Arguments:
+- `<input-path>` - React file (`.tsx`, `.ts`, `.jsx`, `.js`) or project directory
+- `<output-directory>` - Output directory for browser-compatible version
+
+Examples:
+```bash
+# Convert a single TSX file
+npx tsx scripts/tailwind-converter.ts ./src/App.tsx ./animations/my-project
+
+# Convert an entire React project directory
+npx tsx scripts/tailwind-converter.ts ./my-react-project ./animations/converted
+```
+
+What it does:
+- Converts Tailwind CSS classes (`flex`, `min-h-screen`, `bg-blue-500`) to inline styles
+- Handles gradient colors (`from-slate-50`, `to-indigo-600`)
+- Extracts CSS animations to `<style>` tags
+- Removes Node.js imports (`fs`, `path`, etc.)
+- Converts hyphenated CSS properties to camelCase (`min-height` → `minHeight`)
+
+**Before (Tailwind):**
+```jsx
+<div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-indigo-600" />
+```
+
+**After (Browser-compatible):**
+```jsx
+<div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #4f46e5 100%)' }} />
 ```
 
 **CSS Animations Example:**
@@ -365,21 +725,33 @@ import './styles.css'
 npm run convert:pipeline -- animations/my-project output/my-video.mp4 --fps 30 --duration 5
 ```
 
-### Example: Converting a React Project
+### Example: Converting a React Project with Tailwind CSS
 
-If you have a React project at `/home/user/my-react-app/src/App.jsx`:
+If you have a React project with Tailwind CSS at `/home/user/my-react-app/src/App.jsx`:
 
-1. **Copy and adapt the file:**
-   ```bash
-   mkdir -p animations/my-react-app
-   cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx
-   # Then convert Tailwind classes to inline styles
-   ```
+**Step 1: Copy your React files to the animations directory**
+```bash
+mkdir -p animations/my-react-app
+cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx
+```
 
-2. **Convert to video:**
-   ```bash
-   npm run convert:pipeline -- animations/my-react-app output/my-react-video.mp4
-   ```
+**Step 2: Convert Tailwind CSS to inline styles (automatic)**
+```bash
+npx tsx scripts/tailwind-converter.ts animations/my-react-app/index.jsx animations/my-react-app
+```
+
+**Step 3: Convert to video**
+```bash
+npm run convert:pipeline -- animations/my-react-app output/my-react-video.mp4 --fps 30 --duration 5
+```
+
+**Full one-liner:**
+```bash
+mkdir -p animations/my-react-app && \
+  cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx && \
+  npx tsx scripts/tailwind-converter.ts animations/my-react-app/index.jsx animations/my-react-app && \
+  npm run convert:pipeline -- animations/my-react-app output/my-react-video.mp4 --fps 30 --duration 5
+```
 
 ### Tips for Converting Complex Animations
 
@@ -607,6 +979,45 @@ Reduce video resolution or duration in the conversion options.
 1. Check that Babel transpiles your JSX correctly
 2. Ensure `window.animationReady` is set (handled automatically)
 3. Try reducing the animation duration
+
+## Quick Reference
+
+### Convert React with Tailwind to MP4
+```bash
+# 1. Copy React file
+mkdir -p animations/my-animation
+cp /path/to/App.tsx animations/my-animation/index.jsx
+
+# 2. Convert Tailwind to inline styles (choose one)
+npm run convert:tailwind -- animations/my-animation/index.jsx animations/my-animation
+# or
+npx tsx scripts/tailwind-converter.ts animations/my-animation/index.jsx animations/my-animation
+
+# 3. Convert to MP4
+npm run convert:pipeline -- animations/my-animation output/video.mp4 --fps 30 --duration 5
+```
+
+### Common Commands
+
+| Task | Command |
+|------|---------|
+| Convert animation to MP4 | `npm run convert:pipeline -- animations/<name> output/video.mp4` |
+| Convert Tailwind React file | `npm run convert:tailwind -- <input> <output>` |
+| Test HTML generation | `npm run convert:test1` |
+| Test frame capture | `npm run convert:test2` |
+| Test video encoding | `npm run convert:test3` |
+| Validate animation | `npm run validate -- animations/<name>` |
+| Lint code | `npm run lint` |
+
+### Options for Conversion
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--fps` | Frame rate | 30 |
+| `--duration` | Duration in seconds | 5 |
+| `--width` | Width in pixels | 800 |
+| `--height` | Height in pixels | 600 |
+| `--quality` | Quality (low/medium/high) | medium |
 
 ## License
 

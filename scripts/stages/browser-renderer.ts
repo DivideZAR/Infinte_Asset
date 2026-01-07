@@ -31,8 +31,7 @@ async function launchBrowser(): Promise<Browser> {
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--use-gl=swiftshader'
+      '--enable-unsafe-swiftshader'
     ]
   })
   
@@ -113,18 +112,24 @@ async function captureFrames(
     for (let i = 0; i < totalFrames; i++) {
       const framePath = path.join(frameDir, `frame_${String(i).padStart(4, '0')}.png`)
       
-      await page.screenshot({
-        path: framePath,
-        fullPage: false
-      })
-      
-      frameCount++
-      
-      if ((i + 1) % 30 === 0 || i === totalFrames - 1) {
-        console.log(`Progress: ${i + 1}/${totalFrames} frames`)
+      try {
+        await page.screenshot({
+          path: framePath,
+          fullPage: false,
+          timeout: 60000
+        })
+        
+        frameCount++
+        
+        if ((i + 1) % 12 === 0 || i === totalFrames - 1) {
+          console.log(`Progress: ${i + 1}/${totalFrames} frames`)
+        }
+        
+        await page.waitForTimeout(200)
+      } catch (error) {
+        console.error(`Error capturing frame ${i + 1}:`, (error as Error).message)
+        break
       }
-      
-      await page.waitForTimeout(frameInterval)
     }
     
     console.log(`Captured ${frameCount} frames to ${frameDir}`)
