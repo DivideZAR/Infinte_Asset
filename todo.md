@@ -48,12 +48,24 @@ Each task is represented as a JSON object:
 - ✅ Fix TypeScript errors in scripts/stages/pipeline.ts (import.meta, unused imports)
 - ✅ Fix ESLint errors and warnings in scripts directory
 - ✅ Run final verification - ensure npm run lint, test, typecheck, build all pass
+- ✅ Fix Jest configuration for proper module resolution (ESM support)
+- ✅ Create `git-agent` global CLI wrapper for Git_Agent
 
 ### Pending Tasks
 
 #### High Priority
 
-- ✅ Fix Jest configuration for proper module resolution (ESM/CommonJS mismatch causing test failures)
+- [pending] Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame` to fix jitter and variable playback speed
+
+#### Medium Priority
+
+- [pending] Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (SWC or Babel) for robust code transformation
+- [pending] Remove runtime CDN dependencies: Bundle React/Babel locally or pre-compile animations to support offline conversion
+
+#### Low Priority
+
+- [pending] Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing
+- [pending] Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions
 
 ## Notes
 
@@ -63,17 +75,13 @@ Each task is represented as a JSON object:
 - ✅ TypeScript: 0 errors (all script files fixed)
 - ✅ Build: Working (dist/ created successfully)
 - ✅ Jest: Working (all tests passing with ESM support)
+- ✅ CLI: `git-agent` and `tester` (via scripts/tester.js) are operational
 
 ### Known Issues
 
-1. Jest ESM/CommonJS Mismatch
-   - Tests are failing to import from scripts/convert and scripts/validate
-   - The test files are .js but trying to import from .ts files
-   - Need to fix jest.config.js module resolution or test files
-
-2. Git_Agent Created
+1. Git_Agent Created
    - Comprehensive git operations subagent at scripts/Git_Agent.js
-   - Can commit, push, create branches, etc.
+   - Now accessible globally via `git-agent` command
 
 3. Tester_Agent Created
    - Comprehensive testing subagent at scripts/Tester_Agent.js
