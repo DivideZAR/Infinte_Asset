@@ -4,24 +4,23 @@ export default {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.{js,ts}'],
   transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-      useESM: true
-    }]
+    '^.+\\.(ts|tsx|js)$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.json',
+        useESM: true,
+      },
+    ],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  collectCoverageFrom: [
-    'scripts/**/*.ts',
-    'animations/**/*.ts',
-    '!scripts/**/*.d.ts'
-  ],
+  collectCoverageFrom: ['scripts/**/*.ts', 'animations/**/*.ts', '!scripts/**/*.d.ts'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
   verbose: true,
   testTimeout: 30000,
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
-  extensionsToTreatAsEsm: ['.ts']
+  extensionsToTreatAsEsm: ['.ts'],
 }

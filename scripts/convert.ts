@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs-extra'
 import path from 'path'
 import ffmpeg from 'fluent-ffmpeg'
@@ -20,14 +21,20 @@ interface ValidationResult {
 }
 
 class ConversionError extends Error {
-  constructor(message: string, public cause?: Error) {
+  constructor(
+    message: string,
+    public cause?: Error,
+  ) {
     super(message)
     this.name = 'ConversionError'
   }
 }
 
 class ValidationError extends Error {
-  constructor(message: string, public errors?: string[]) {
+  constructor(
+    message: string,
+    public errors?: string[],
+  ) {
     super(message)
     this.name = 'ValidationError'
   }
@@ -37,10 +44,10 @@ async function validateAnimationDir(dir: string): Promise<ValidationResult> {
   const result: ValidationResult = {
     valid: true,
     errors: [],
-    warnings: []
+    warnings: [],
   }
 
-  if (!await fs.pathExists(dir)) {
+  if (!(await fs.pathExists(dir))) {
     result.valid = false
     result.errors.push(`Animation directory does not exist: ${dir}`)
     return result
@@ -54,12 +61,14 @@ async function validateAnimationDir(dir: string): Promise<ValidationResult> {
   }
 
   const files = await fs.readdir(dir)
-  const hasIndexFile = files.some(f => 
-    f === 'index.jsx' || f === 'index.tsx' || f === 'index.js' || f === 'index.ts'
+  const hasIndexFile = files.some(
+    (f) => f === 'index.jsx' || f === 'index.tsx' || f === 'index.js' || f === 'index.ts',
   )
 
   if (!hasIndexFile) {
-    result.warnings.push('No index file found. The animation should have an index.jsx or index.tsx file.')
+    result.warnings.push(
+      'No index file found. The animation should have an index.jsx or index.tsx file.',
+    )
   }
 
   return result
@@ -74,7 +83,7 @@ async function validateSource(source: string): Promise<void> {
 
 function getFFmpegArgs(options: ConversionOptions): string[] {
   const args: string[] = []
-  
+
   switch (options.quality) {
     case 'low':
       args.push('-crf', '28', '-preset', 'fast')
@@ -91,7 +100,10 @@ function getFFmpegArgs(options: ConversionOptions): string[] {
 
   const width = options.width || 1920
   const height = options.height || 1080
-  args.push('-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`)
+  args.push(
+    '-vf',
+    `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
+  )
 
   const fps = options.fps || 30
   args.push('-r', fps.toString())
@@ -118,7 +130,6 @@ async function performConversion(options: ConversionOptions): Promise<string> {
     const height = options.height || 1080
     const duration = options.duration || 10
     const fps = options.fps || 30
-    const totalFrames = Math.ceil(duration * fps)
     const framePattern = path.join(tempDir, 'frame_%04d.png')
 
     await new Promise<void>((resolve, reject) => {
@@ -130,17 +141,14 @@ async function performConversion(options: ConversionOptions): Promise<string> {
         .input(`aevalsrc=0`)
         .inputFormat('lavfi')
         .output(framePattern)
-        .outputOptions([
-          `-r ${fps}`,
-          '-pix_fmt rgba'
-        ])
+        .outputOptions([`-r ${fps}`, '-pix_fmt rgba'])
         .on('end', () => {
           console.log('Frame generation completed')
           resolve()
         })
-        .on('error', (err) => {
+        .on('error', (_err: Error) => {
           console.warn('Test source not available, generating solid color frames...')
-          
+
           ffmpeg()
             .input(`color=c=0x1a1a2e:s=${width}x${height}:d=${duration}:r=${fps}`)
             .inputFormat('lavfi')
@@ -150,7 +158,7 @@ async function performConversion(options: ConversionOptions): Promise<string> {
               console.log('Frame generation completed')
               resolve()
             })
-            .on('error', (err2) => {
+            .on('error', (err2: Error) => {
               reject(new ConversionError('Frame generation failed', err2))
             })
             .run()
@@ -174,7 +182,7 @@ async function performConversion(options: ConversionOptions): Promise<string> {
         .run()
     })
 
-    if (!await fs.pathExists(options.outputPath)) {
+    if (!(await fs.pathExists(options.outputPath))) {
       throw new ConversionError('Output file was not created')
     }
 
@@ -187,7 +195,11 @@ async function performConversion(options: ConversionOptions): Promise<string> {
   }
 }
 
-async function convertAnimation(source: string, outputPath: string, options: Partial<ConversionOptions> = {}): Promise<string> {
+async function convertAnimation(
+  source: string,
+  outputPath: string,
+  options: Partial<ConversionOptions> = {},
+): Promise<string> {
   const fullOptions: ConversionOptions = {
     inputDir: source,
     outputPath,
@@ -195,7 +207,7 @@ async function convertAnimation(source: string, outputPath: string, options: Par
     duration: options.duration || 10,
     width: options.width || 1920,
     height: options.height || 1080,
-    quality: options.quality || 'medium'
+    quality: options.quality || 'medium',
   }
 
   try {
@@ -210,7 +222,7 @@ async function convertAnimation(source: string, outputPath: string, options: Par
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
-  
+
   if (args.length < 2) {
     console.log('Usage: npm run convert -- <input-dir> <output-file.mp4> [options]')
     console.log('Options:')
@@ -224,18 +236,24 @@ async function main(): Promise<void> {
 
   const inputDir = args[0]
   const outputPath = args[1]
-  
+
   const options: Partial<ConversionOptions> = {}
   for (let i = 2; i < args.length; i += 2) {
     const key = args[i].replace(/^--/, '')
     const value = args[i + 1]
-    
+
     switch (key) {
       case 'fps':
+        options.fps = parseInt(value, 10)
+        break
       case 'duration':
+        options.duration = parseInt(value, 10)
+        break
       case 'width':
+        options.width = parseInt(value, 10)
+        break
       case 'height':
-        options[key as keyof ConversionOptions] = parseInt(value, 10)
+        options.height = parseInt(value, 10)
         break
       case 'quality':
         options.quality = value as 'low' | 'medium' | 'high'
@@ -254,10 +272,6 @@ async function main(): Promise<void> {
 
 export { convertAnimation, validateSource, ConversionError, ValidationError, ConversionOptions }
 
-if (import.meta.url.startsWith('file:')) {
-  const modulePath = new URL('', import.meta.url).pathname
-  const mainPath = process.argv[1] || ''
-  if (mainPath === modulePath || mainPath.endsWith(import.meta.url.pathname)) {
-    main()
-  }
-}
+/* eslint-enable no-console */
+
+main()

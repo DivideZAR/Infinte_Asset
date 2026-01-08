@@ -24,14 +24,17 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": [
-    "scripts/**/*",
-    "animations/**/*",
-    "tests/**/*"
-  ],
+  "include": ["scripts/**/*", "animations/**/*", "tests/**/*"],
   "exclude": [
     "node_modules",
     "dist",
-    "output"
+    "output",
+    "animations/Scene1",
+    "animations/Walking_dog",
+    "animations/Walling_dog",
+    "animations/walking-dog",
+    "animations/walling-dog-v2",
+    "animations/walling-dog",
+    "animations/**/node_modules"
   ]
 }

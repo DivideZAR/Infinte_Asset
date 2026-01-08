@@ -1,9 +1,8 @@
+/* eslint-disable no-console */
 import express from 'express'
 import fs from 'fs-extra'
 import path from 'path'
 import { glob } from 'glob'
-import React from 'react'
-import ReactDOMServer from 'react-dom/server'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -11,10 +10,10 @@ const PORT = process.env.PORT || 3000
 app.use(express.json())
 app.use(express.static(path.join(process.cwd(), 'animations')))
 
-app.get('/api/animations', async (req, res) => {
+app.get('/api/animations', async (_req, res) => {
   try {
     const animationsDir = path.join(process.cwd(), 'animations')
-    if (!await fs.pathExists(animationsDir)) {
+    if (!(await fs.pathExists(animationsDir))) {
       return res.json({ animations: [] })
     }
 
@@ -25,21 +24,21 @@ app.get('/api/animations', async (req, res) => {
       if (entry.isDirectory()) {
         const animationPath = path.join(animationsDir, entry.name)
         const files = await glob('**/*', { cwd: animationPath })
-        const hasMainFile = files.some(f => /^index\.(jsx?|tsx?)$/i.test(f))
-        
+        const hasMainFile = files.some((f) => /^index\.(jsx?|tsx?)$/i.test(f))
+
         if (hasMainFile) {
           animations.push({
             name: entry.name,
             path: `/animations/${entry.name}/index.jsx`,
-            files: files.length
+            files: files.length,
           })
         }
       }
     }
 
-    res.json({ animations })
+    return res.json({ animations })
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message })
+    return res.status(500).json({ error: (error as Error).message })
   }
 })
 
@@ -48,24 +47,24 @@ app.get('/api/render/:animationName', async (req, res) => {
   const animationPath = path.join(process.cwd(), 'animations', animationName)
 
   try {
-    if (!await fs.pathExists(animationPath)) {
+    if (!(await fs.pathExists(animationPath))) {
       return res.status(404).json({ error: 'Animation not found' })
     }
 
     const files = await glob('**/*.{jsx,tsx,js,ts}', { cwd: animationPath })
-    const mainFile = files.find(f => /^index\.(jsx?|tsx?)$/i.test(f))
+    const mainFile = files.find((f) => /^index\.(jsx?|tsx?)$/i.test(f))
 
     if (!mainFile) {
       return res.status(404).json({ error: 'No main entry file found' })
     }
 
-    res.json({
+    return res.json({
       animation: animationName,
       mainFile,
-      files
+      files,
     })
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message })
+    return res.status(500).json({ error: (error as Error).message })
   }
 })
 
@@ -79,11 +78,11 @@ app.post('/api/render/:animationName', async (req, res) => {
     duration,
     width,
     height,
-    message: 'Animation rendering initiated'
+    message: 'Animation rendering initiated',
   })
 })
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() })
 })
 
@@ -104,10 +103,8 @@ async function startServer(): Promise<void> {
 
 export { app, startServer }
 
-if (import.meta.url.startsWith('file:')) {
-  const modulePath = new URL('', import.meta.url).pathname
-  const mainPath = process.argv[1] || ''
-  if (mainPath === modulePath || mainPath.endsWith(import.meta.url.pathname)) {
-    startServer()
-  }
+/* eslint-enable no-console */
+
+if (require.main === module) {
+  startServer()
 }

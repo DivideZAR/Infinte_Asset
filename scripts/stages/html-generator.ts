@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from 'fs-extra'
 import path from 'path'
 
@@ -12,7 +13,7 @@ const DEFAULT_CONFIG: AnimationConfig = {
   width: 800,
   height: 600,
   fps: 30,
-  duration: 5
+  duration: 5,
 }
 
 const HTML_TEMPLATE = `<!DOCTYPE html>
@@ -54,60 +55,74 @@ interface HtmlResult {
   config: AnimationConfig
 }
 
-function stripExports(code) {
+function stripExports(code: string) {
   let result = code
-  
+
   result = result.replace(/export\s+default\s+/g, '')
   result = result.replace(/export\s+const\s+/g, 'const ')
   result = result.replace(/export\s+function\s+/g, 'function ')
   result = result.replace(/export\s+/g, '')
-  
-  const reactImports = []
-  
-  const importReactBoth = result.match(/import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/g)
+
+  const reactImports: string[] = []
+
+  const importReactBoth = result.match(
+    /import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/g,
+  )
   if (importReactBoth) {
-    importReactBoth.forEach(match => {
-      const hookMatch = match.match(/import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/)
+    importReactBoth.forEach((match: string) => {
+      const hookMatch = match.match(
+        /import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/,
+      )
       if (hookMatch && hookMatch[1]) {
-        const hooks = hookMatch[1].split(',').map(h => h.trim()).filter(h => h)
+        const hooks = hookMatch[1]
+          .split(',')
+          .map((h: string) => h.trim())
+          .filter((h: string) => h)
         reactImports.push(...hooks)
       }
     })
     result = result.replace(/import\s+React\s*,\s*\{\s*[^}]+\s*\}\s*from\s+['"]react['"];?/g, '')
   }
-  
+
   const importReactOnly = result.match(/import\s+React\s+from\s+['"]react['"];?/g)
   if (importReactOnly) {
     result = result.replace(/import\s+React\s+from\s+['"]react['"];?/g, '')
   }
-  
+
   const importHooksOnly = result.match(/import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]react['"];?/g)
   if (importHooksOnly) {
-    importHooksOnly.forEach(match => {
-      const hookMatch = match.match(/import\s+\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/)
+    importHooksOnly.forEach((match: string) => {
+      const hookMatch = match.match(/import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]react['"];?/)
       if (hookMatch && hookMatch[1]) {
-        const hooks = hookMatch[1].split(',').map(h => h.trim()).filter(h => h)
+        const hooks = hookMatch[1]
+          .split(',')
+          .map((h: string) => h.trim())
+          .filter((h: string) => h)
         reactImports.push(...hooks)
       }
     })
-    result = result.replace(/import\s+\{\s*[^}]+\s*\}\s*from\s+['"]react['"];?/g, '')
+    result = result.replace(/import\s+\{\s*[^}]+\s*\}\s+from\s+['"]react['"];?/g, '')
   }
-  
+
   result = result.replace(/import\s+[^'"]+from\s+['"][^'"]+['"];?/g, '')
-  
-  const uniqueHooks = [...new Set(reactImports)].filter(h => h)
+
+  const uniqueHooks = [...new Set(reactImports)].filter((h: string) => h)
   if (uniqueHooks.length > 0) {
     result = `const { ${uniqueHooks.join(', ')} } = React;\n\n` + result
   }
-  
+
   return result
 }
 
-async function generateHtml(animationDir: string, outputDir: string, config?: Partial<AnimationConfig>): Promise<HtmlResult> {
+async function generateHtml(
+  animationDir: string,
+  outputDir: string,
+  config?: Partial<AnimationConfig>,
+): Promise<HtmlResult> {
   const fullConfig = { ...DEFAULT_CONFIG, ...config }
-  
+
   await fs.ensureDir(outputDir)
-  
+
   const prebuiltHtmlPath = path.join(animationDir, 'index.html')
   if (await fs.pathExists(prebuiltHtmlPath)) {
     const outputHtmlPath = path.join(outputDir, 'animation.html')
@@ -115,47 +130,47 @@ async function generateHtml(animationDir: string, outputDir: string, config?: Pa
     console.log(`Using pre-built HTML file: ${prebuiltHtmlPath}`)
     return { htmlPath: outputHtmlPath, config: fullConfig }
   }
-  
+
   const animationFiles = await collectAnimationFiles(animationDir)
-  
+
   let combinedCode = ''
-  
+
   for (const file of animationFiles) {
-    let content = await fs.readFile(file, 'utf-8')
+    const content = await fs.readFile(file, 'utf-8')
     const relativePath = path.relative(animationDir, file)
     combinedCode += `// File: ${relativePath}\n${content}\n\n`
   }
-  
+
   combinedCode = stripExports(combinedCode)
-  
-  const componentMatch = combinedCode.match(/export\s+default\s+function\s+(\w+)/)?.[1] ||
-                        combinedCode.match(/export\s+const\s+(\w+)\s*=/)?.[1] ||
-                        combinedCode.match(/function\s+(\w+)\s*\(\s*\{[^}]*\}\s*\)/)?.[1] ||
-                        combinedCode.match(/function\s+(\w+)\s*\(\s*props\s*\)/)?.[1] ||
-                        combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
-                        'App'
-  
+
+  const componentMatch =
+    combinedCode.match(/export\s+default\s+function\s+(\w+)/)?.[1] ||
+    combinedCode.match(/export\s+const\s+(\w+)\s*=/)?.[1] ||
+    combinedCode.match(/function\s+(\w+)\s*\(\s*\{[^}]*\}\s*\)/)?.[1] ||
+    combinedCode.match(/function\s+(\w+)\s*\(\s*props\s*\)/)?.[1] ||
+    combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
+    'App'
+
   combinedCode += `\n\n// Auto-generated render call\nReactDOM.createRoot(document.getElementById('root')).render(React.createElement(${componentMatch}));`
-  
-  const htmlContent = HTML_TEMPLATE
-    .replace('{ANIMATION_CODE}', combinedCode)
-  
+
+  const htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', combinedCode)
+
   const htmlPath = path.join(outputDir, 'animation.html')
   await fs.writeFile(htmlPath, htmlContent)
-  
+
   console.log(`Generated HTML: ${htmlPath}`)
-  
+
   return { htmlPath, config: fullConfig }
 }
 
 async function collectAnimationFiles(dir: string): Promise<string[]> {
   const files: string[] = []
-  
+
   const entries = await fs.readdir(dir, { withFileTypes: true })
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name)
-    
+
     if (entry.isDirectory()) {
       if (entry.name !== 'node_modules' && !entry.name.startsWith('.')) {
         const subFiles = await collectAnimationFiles(fullPath)
@@ -165,7 +180,7 @@ async function collectAnimationFiles(dir: string): Promise<string[]> {
       files.push(fullPath)
     }
   }
-  
+
   return files.sort((a, b) => {
     const aName = path.basename(a).toLowerCase()
     const bName = path.basename(b).toLowerCase()
@@ -175,30 +190,32 @@ async function collectAnimationFiles(dir: string): Promise<string[]> {
   })
 }
 
-async function validateAnimationForHtml(animationDir: string): Promise<{ valid: boolean; errors: string[] }> {
-  const result = { valid: true, errors: [] as string[] }
-  
-  if (!await fs.pathExists(animationDir)) {
+async function validateAnimationForHtml(
+  animationDir: string,
+): Promise<{ valid: boolean; errors: string[]; warnings?: string[] }> {
+  const result = { valid: true, errors: [] as string[], warnings: [] as string[] }
+
+  if (!(await fs.pathExists(animationDir))) {
     result.valid = false
     result.errors.push('Animation directory does not exist')
     return result
   }
-  
+
   const stats = await fs.stat(animationDir)
   if (!stats.isDirectory()) {
     result.valid = false
     result.errors.push('Path is not a directory')
     return result
   }
-  
+
   const files = await collectAnimationFiles(animationDir)
-  
+
   if (files.length === 0) {
     result.valid = false
     result.errors.push('No JavaScript/JSX files found')
     return result
   }
-  
+
   let hasReactImport = false
   for (const file of files) {
     const content = await fs.readFile(file, 'utf-8')
@@ -207,13 +224,15 @@ async function validateAnimationForHtml(animationDir: string): Promise<{ valid: 
       break
     }
   }
-  
+
   if (!hasReactImport) {
     result.warnings = result.warnings || []
     result.warnings.push('No React import found - the code may not work correctly')
   }
-  
+
   return result
 }
+
+/* eslint-enable no-console */
 
 export { generateHtml, validateAnimationForHtml, HtmlResult, AnimationConfig, DEFAULT_CONFIG }
