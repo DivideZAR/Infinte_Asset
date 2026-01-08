@@ -2,7 +2,8 @@ node_modules/
 dist/
 build/
 coverage/
-output/*.mp4
+output/
+test-output/
 temp/
 .env
 .env.local
