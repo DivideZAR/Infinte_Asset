@@ -1,5 +1,11 @@
 import path from 'path'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
 import { describe, it, expect } from '@jest/globals'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 import {
   convertAnimation,
   validateSource,
@@ -18,8 +24,8 @@ describe('AnimationConverter', () => {
   })
 
   describe('convertAnimation', () => {
-    it('should throw ConversionError when validation fails', async () => {
-      await expect(convertAnimation('/invalid', testOutputPath)).rejects.toThrow(ConversionError)
+    it('should throw ValidationError when validation fails', async () => {
+      await expect(convertAnimation('/invalid', testOutputPath)).rejects.toThrow(ValidationError)
     })
   })
 

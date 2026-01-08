@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { fileURLToPath } from 'url'
 import fs from 'fs-extra'
 import path from 'path'
 import { glob } from 'glob'
@@ -16,7 +17,7 @@ interface ValidationOptions {
   checkImports?: boolean
 }
 
-class ValidationError extends Error {
+export class ValidationError extends Error {
   constructor(
     message: string,
     public errors?: string[],
@@ -34,7 +35,7 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
-async function validateAnimationDir(
+export async function validateAnimationDir(
   dir: string,
   options: ValidationOptions = {},
 ): Promise<ValidationResult> {
@@ -139,7 +140,7 @@ async function validateAnimationDir(
   return result
 }
 
-async function validateAnimation(
+export async function validateAnimation(
   animationPath: string,
   options: ValidationOptions = {},
 ): Promise<ValidationResult> {
@@ -218,16 +219,11 @@ async function main(): Promise<void> {
   }
 }
 
-export {
-  validateAnimation,
-  validateAnimationDir,
-  ValidationResult,
-  ValidationError,
-  ValidationOptions,
-}
+export type { ValidationResult, ValidationOptions }
 
 /* eslint-enable no-console */
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main()
 }
+

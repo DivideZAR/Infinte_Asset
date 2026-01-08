@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { fileURLToPath } from 'url'
 import fs from 'fs-extra'
 import path from 'path'
 import ffmpeg from 'fluent-ffmpeg'
@@ -20,7 +21,7 @@ interface ValidationResult {
   warnings: string[]
 }
 
-class ConversionError extends Error {
+export class ConversionError extends Error {
   constructor(
     message: string,
     public cause?: Error,
@@ -30,7 +31,7 @@ class ConversionError extends Error {
   }
 }
 
-class ValidationError extends Error {
+export class ValidationError extends Error {
   constructor(
     message: string,
     public errors?: string[],
@@ -74,7 +75,7 @@ async function validateAnimationDir(dir: string): Promise<ValidationResult> {
   return result
 }
 
-async function validateSource(source: string): Promise<void> {
+export async function validateSource(source: string): Promise<void> {
   const result = await validateAnimationDir(source)
   if (!result.valid) {
     throw new ValidationError('Animation validation failed', result.errors)
@@ -195,7 +196,7 @@ async function performConversion(options: ConversionOptions): Promise<string> {
   }
 }
 
-async function convertAnimation(
+export async function convertAnimation(
   source: string,
   outputPath: string,
   options: Partial<ConversionOptions> = {},
@@ -270,8 +271,11 @@ async function main(): Promise<void> {
   }
 }
 
-export { convertAnimation, validateSource, ConversionError, ValidationError, ConversionOptions }
+export type { ConversionOptions }
 
 /* eslint-enable no-console */
 
-main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+}
+

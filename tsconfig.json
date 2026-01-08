@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "allowJs": true,
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./",
@@ -24,7 +26,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["scripts/**/*", "animations/**/*", "tests/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "animations/**/*", "tests/**/*"],
   "exclude": [
     "node_modules",
     "dist",
