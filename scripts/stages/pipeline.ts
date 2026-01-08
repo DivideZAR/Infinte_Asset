@@ -161,9 +161,13 @@ async function convertAnimation(
       error as Error,
     )
   } finally {
-    if (htmlPath && frameDir) {
-      console.log(`\nCleaning up temp files...`)
-      await fs.remove(tempDir)
+    try {
+      if (await fs.pathExists(tempDir)) {
+        console.log(`\nCleaning up temp files...`)
+        await fs.remove(tempDir)
+      }
+    } catch (cleanupError) {
+      console.error('Failed to clean up temp directory:', cleanupError)
     }
   }
 }

@@ -71,11 +71,13 @@ Each task is represented as a JSON object:
 
 #### High Priority
 
-(No high priority tasks currently pending)
+- [in_progress] Fix Capture Loop Precision: Remove arbitrary 500ms fast-forward and clean up unused console logs (Active Branch: `fix/code-review`)
+- [pending] Enhance AST Transformation: Support default/namespace imports for React and improve component name detection
 
 #### Medium Priority
 
-(No medium priority tasks currently pending)
+- [pending] Improve Cleanup Logic: Ensure temp directories are always removed, even on early failure
+- [pending] Canvas Optimization Safety: Handle multiple canvases correctly
 
 #### Low Priority
 

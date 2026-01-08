@@ -72,12 +72,27 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
         if (ts.isImportDeclaration(node)) {
           const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text
           if (moduleSpecifier === 'react' && node.importClause) {
+            
+            // Handle: import { useState } from 'react'
             if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
               node.importClause.namedBindings.elements.forEach((element) => {
                 reactHooks.add(element.name.text)
               })
             }
+            
+            // Handle: import React from 'react'
+            if (node.importClause.name) {
+                // If they use "React", we don't need to do anything as it's global.
+                // If they use something else, like "MyReact", we might need to alias it, 
+                // but for now we assume they use "React" or destructuring.
+            }
+            
+            // Handle: import * as React from 'react'
+            if (node.importClause.namedBindings && ts.isNamespaceImport(node.importClause.namedBindings)) {
+                 // namespace import, essentially same as default import for our purpose since React is global
+            }
           }
+          // Remove all imports
           return undefined
         }
 

@@ -75,14 +75,11 @@ async function captureFrames(
     const context = await createContext(browser, fullConfig)
     const page = await context.newPage()
 
-    const consoleMessages: string[] = []
     const consoleErrors: string[] = []
 
     page.on('console', (msg) => {
-      const text = msg.text()
-      consoleMessages.push(text)
       if (msg.type() === 'error') {
-        consoleErrors.push(text)
+        consoleErrors.push(msg.text())
       }
     })
 
@@ -111,17 +108,23 @@ async function captureFrames(
       console.warn('Animation ready signal not received, continuing anyway...')
     }
 
-    // Give it a moment to finish initial React effect/rendering
-    await page.clock.fastForward(500)
-
+    // Capture the first frame immediately (t=0)
+    
     const totalFrames = Math.ceil(fullConfig.fps * fullConfig.duration)
     let frameCount = 0
     const frameInterval = 1000 / fullConfig.fps
 
     console.log(`Capturing ${totalFrames} frames...`)
 
-    // Check if a canvas element exists for optimized capture
-    const hasCanvas = await page.evaluate(() => !!document.querySelector('canvas'))
+    // Check if a valid canvas element exists for optimized capture
+    const hasCanvas = await page.evaluate(() => {
+      const canvases = Array.from(document.querySelectorAll('canvas'))
+      // Find largest visible canvas
+      const validCanvas = canvases
+        .filter(c => c.width > 0 && c.height > 0)
+        .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0]
+      return !!validCanvas
+    })
     console.log(`Optimization: ${hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'}`)
 
     for (let i = 0; i < totalFrames; i++) {
@@ -129,9 +132,12 @@ async function captureFrames(
 
       try {
         if (hasCanvas) {
-          // Optimized: Get base64 data directly from canvas
+          // Optimized: Get base64 data directly from the largest canvas
           const dataUrl = await page.evaluate(() => {
-            const canvas = document.querySelector('canvas')
+            const canvases = Array.from(document.querySelectorAll('canvas'))
+            const canvas = canvases
+              .filter(c => c.width > 0 && c.height > 0)
+              .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0]
             return canvas ? canvas.toDataURL('image/png') : null
           })
 
