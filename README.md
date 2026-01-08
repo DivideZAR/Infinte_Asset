@@ -146,9 +146,9 @@ npm run convert:pipeline -- animations/<name> output/video.mp4
 
 The conversion pipeline consists of 3 stages:
 
-1. **HTML Generator** - Converts React JSX files into a self-contained HTML page with React loaded via CDN
-2. **Browser Renderer** - Loads the HTML in a headless Playwright browser and captures frames as PNG images
-3. **Video Encoder** - Combines PNG frames into an MP4 video using FFmpeg
+1. **HTML Generator** - Converts React JSX files into a self-contained HTML page. It uses the **TypeScript Compiler API** to pre-compile JSX and bundles local React/ReactDOM libraries for **offline support**.
+2. **Browser Renderer** - Loads the HTML in a headless Playwright browser and captures frames as PNG images. It uses the **Clock API** for perfect frame synchronization and **Canvas optimization** for high performance.
+3. **Video Encoder** - Combines PNG frames into an MP4 video using FFmpeg.
 
 ## Where to Add Animations
 
