@@ -4,7 +4,7 @@ export default {
   roots: ['<rootDir>/tests'],
   testMatch: ['**/*.test.{js,ts}'],
   transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': ['ts-jest', {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
       tsconfig: 'tsconfig.json',
       useESM: true
     }]

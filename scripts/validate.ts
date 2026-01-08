@@ -4,8 +4,6 @@ import { glob } from 'glob'
 import { promisify } from 'util'
 import { exec } from 'child_process'
 
-const execAsync = promisify(exec)
-
 interface ValidationResult {
   valid: boolean
   errors: string[]
@@ -48,10 +46,16 @@ async function validateAnimationDir(dir: string, options: ValidationOptions = {}
     return result
   }
 
-  const stats = await fs.stat(dir)
-  if (!stats.isDirectory()) {
+  try {
+    const stats = await fs.stat(dir)
+    if (!stats.isDirectory()) {
+      result.valid = false
+      result.errors.push(`Path is not a directory: ${dir}`)
+      return result
+    }
+  } catch {
     result.valid = false
-    result.errors.push(`Path is not a directory: ${dir}`)
+    result.errors.push(`Could not stat path: ${dir}`)
     return result
   }
 
@@ -219,12 +223,13 @@ async function main(): Promise<void> {
   }
 }
 
-export { validateAnimation, validateAnimationDir, ValidationResult, ValidationError, ValidationOptions }
+export { validateAnimation, validateAnimationDir, ValidationError }
+export type { ValidationResult, ValidationOptions }
 
 if (import.meta.url.startsWith('file:')) {
   const modulePath = new URL('', import.meta.url).pathname
   const mainPath = process.argv[1] || ''
-  if (mainPath === modulePath || mainPath.endsWith(import.meta.url.pathname)) {
+  if (mainPath === modulePath || mainPath.endsWith(modulePath)) {
     main()
   }
 }

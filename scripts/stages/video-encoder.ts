@@ -44,11 +44,10 @@ async function getFrameSize(frameDir: string): Promise<{ width: number; height: 
   
   if (!firstFrame) return null
   
-  const { promisify } = await import('util')
-  const sizeOf = (await import('image-size')).imageSize
+  const { imageSize } = await import('image-size')
   
   try {
-    const dimensions = sizeOf(path.join(frameDir, firstFrame))
+    const dimensions = imageSize(path.join(frameDir, firstFrame))
     return { width: dimensions.width || 0, height: dimensions.height || 0 }
   } catch {
     return null
@@ -105,8 +104,8 @@ async function encodeFrames(
         console.log('FFmpeg command:', cmd)
       })
       .on('progress', (progress) => {
-        if (progress.percent) {
-          console.log(`Encoding: ${Math.round(progress.percent)}%`)
+        if ((progress as any).percent) {
+          console.log(`Encoding: ${Math.round((progress as any).percent)}%`)
         }
       })
       .on('end', async () => {
@@ -206,7 +205,6 @@ export {
   generateThumbnail, 
   getVideoInfo, 
   getFrameCount, 
-  EncoderConfig, 
-  EncodeResult,
   DEFAULT_CONFIG 
 }
+export type { EncoderConfig, EncodeResult }

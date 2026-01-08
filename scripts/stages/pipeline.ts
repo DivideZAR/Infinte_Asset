@@ -1,9 +1,9 @@
 import fs from 'fs-extra'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import { generateHtml, validateAnimationForHtml, HtmlResult } from './html-generator'
-import { captureFrames, validateBrowser } from './browser-renderer'
-import { encodeFrames, EncoderConfig } from './video-encoder'
+import { generateHtml, validateAnimationForHtml } from './html-generator.js'
+import { captureFrames, validateBrowser } from './browser-renderer.js'
+import { encodeFrames } from './video-encoder.js'
 
 interface FullPipelineConfig {
   width: number
@@ -269,9 +269,9 @@ export {
   testStage3, 
   testAllStages,
   PipelineError,
-  FullPipelineConfig,
   DEFAULT_PIPELINE_CONFIG 
 }
+export type { FullPipelineConfig }
 
 if (import.meta.url.startsWith('file:')) {
   const args = process.argv.slice(2)

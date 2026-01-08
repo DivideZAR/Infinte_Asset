@@ -1,6 +1,6 @@
 import fs from 'fs-extra'
 import path from 'path'
-import { chromium, Browser, Page, BrowserContext } from 'playwright'
+import { chromium, Browser, BrowserContext } from 'playwright'
 
 interface RenderConfig {
   width: number
@@ -20,6 +20,12 @@ const DEFAULT_CONFIG: RenderConfig = {
   height: 600,
   fps: 30,
   duration: 5
+}
+
+declare global {
+  interface Window {
+    animationReady?: boolean
+  }
 }
 
 async function launchBrowser(): Promise<Browser> {
@@ -159,4 +165,5 @@ async function validateBrowser(): Promise<{ available: boolean; version?: string
   }
 }
 
-export { captureFrames, validateBrowser, RenderConfig, RenderResult, DEFAULT_CONFIG }
+export { captureFrames, validateBrowser, DEFAULT_CONFIG }
+export type { RenderConfig, RenderResult }

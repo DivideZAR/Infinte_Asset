@@ -2,8 +2,6 @@ import express from 'express'
 import fs from 'fs-extra'
 import path from 'path'
 import { glob } from 'glob'
-import React from 'react'
-import ReactDOMServer from 'react-dom/server'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -11,7 +9,7 @@ const PORT = process.env.PORT || 3000
 app.use(express.json())
 app.use(express.static(path.join(process.cwd(), 'animations')))
 
-app.get('/api/animations', async (req, res) => {
+app.get('/api/animations', async (_req, res) => {
   try {
     const animationsDir = path.join(process.cwd(), 'animations')
     if (!await fs.pathExists(animationsDir)) {
@@ -37,9 +35,9 @@ app.get('/api/animations', async (req, res) => {
       }
     }
 
-    res.json({ animations })
+    return res.json({ animations })
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message })
+    return res.status(500).json({ error: (error as Error).message })
   }
 })
 
@@ -59,13 +57,13 @@ app.get('/api/render/:animationName', async (req, res) => {
       return res.status(404).json({ error: 'No main entry file found' })
     }
 
-    res.json({
+    return res.json({
       animation: animationName,
       mainFile,
       files
     })
   } catch (error) {
-    res.status(500).json({ error: (error as Error).message })
+    return res.status(500).json({ error: (error as Error).message })
   }
 })
 
@@ -107,7 +105,7 @@ export { app, startServer }
 if (import.meta.url.startsWith('file:')) {
   const modulePath = new URL('', import.meta.url).pathname
   const mainPath = process.argv[1] || ''
-  if (mainPath === modulePath || mainPath.endsWith(import.meta.url.pathname)) {
+  if (mainPath === modulePath || mainPath.endsWith(modulePath)) {
     startServer()
   }
 }

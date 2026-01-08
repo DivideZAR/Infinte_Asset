@@ -100,7 +100,11 @@ function getFFmpegArgs(options: ConversionOptions): string[] {
 }
 
 async function performConversion(options: ConversionOptions): Promise<string> {
-  await validateSource(options.inputDir)
+  try {
+    await validateSource(options.inputDir)
+  } catch (error) {
+    throw new ConversionError('Animation validation failed', error as Error)
+  }
 
   const tempDir = path.join(process.cwd(), 'temp', uuidv4())
   await fs.ensureDir(tempDir)
@@ -118,7 +122,6 @@ async function performConversion(options: ConversionOptions): Promise<string> {
     const height = options.height || 1080
     const duration = options.duration || 10
     const fps = options.fps || 30
-    const totalFrames = Math.ceil(duration * fps)
     const framePattern = path.join(tempDir, 'frame_%04d.png')
 
     await new Promise<void>((resolve, reject) => {
@@ -138,7 +141,7 @@ async function performConversion(options: ConversionOptions): Promise<string> {
           console.log('Frame generation completed')
           resolve()
         })
-        .on('error', (err) => {
+        .on('error', (_err: any) => {
           console.warn('Test source not available, generating solid color frames...')
           
           ffmpeg()
@@ -150,7 +153,7 @@ async function performConversion(options: ConversionOptions): Promise<string> {
               console.log('Frame generation completed')
               resolve()
             })
-            .on('error', (err2) => {
+            .on('error', (err2: any) => {
               reject(new ConversionError('Frame generation failed', err2))
             })
             .run()
@@ -232,10 +235,16 @@ async function main(): Promise<void> {
     
     switch (key) {
       case 'fps':
+        options.fps = parseInt(value, 10)
+        break
       case 'duration':
+        options.duration = parseInt(value, 10)
+        break
       case 'width':
+        options.width = parseInt(value, 10)
+        break
       case 'height':
-        options[key as keyof ConversionOptions] = parseInt(value, 10)
+        options.height = parseInt(value, 10)
         break
       case 'quality':
         options.quality = value as 'low' | 'medium' | 'high'
@@ -252,12 +261,13 @@ async function main(): Promise<void> {
   }
 }
 
-export { convertAnimation, validateSource, ConversionError, ValidationError, ConversionOptions }
+export { convertAnimation, validateSource, ConversionError }
+export type { ValidationError, ConversionOptions }
 
 if (import.meta.url.startsWith('file:')) {
   const modulePath = new URL('', import.meta.url).pathname
   const mainPath = process.argv[1] || ''
-  if (mainPath === modulePath || mainPath.endsWith(import.meta.url.pathname)) {
+  if (mainPath === modulePath || mainPath.endsWith(modulePath)) {
     main()
   }
 }

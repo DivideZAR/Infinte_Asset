@@ -1,9 +1,12 @@
 import path from 'path'
-import { jest, describe, it, expect, beforeEach } from '@jest/globals'
-import { convertAnimation, validateSource, ConversionError, ValidationError } from '../scripts/convert.ts'
+import { describe, it, expect } from '@jest/globals'
+import { convertAnimation, validateSource, ConversionError, ValidationError } from '../scripts/convert.js'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 describe('AnimationConverter', () => {
-  const testAnimationDir = path.join(__dirname, 'fixtures', 'valid-animation')
   const testOutputPath = path.join(__dirname, 'output', 'test.mp4')
 
   describe('validateSource', () => {

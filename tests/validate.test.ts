@@ -1,6 +1,10 @@
 import path from 'path'
-import { jest, describe, it, expect } from '@jest/globals'
-import { validateAnimationDir, ValidationError, ValidationOptions } from '../scripts/validate.ts'
+import { describe, it, expect } from '@jest/globals'
+import { validateAnimationDir, ValidationError, ValidationOptions } from '../scripts/validate.js'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 describe('AnimationValidator', () => {
   const testAnimationDir = path.join(__dirname, 'fixtures', 'test-animation')
@@ -14,7 +18,7 @@ describe('AnimationValidator', () => {
     })
 
     it('should return invalid result for non-directory path', async () => {
-      const result = await validateAnimationDir('/some/file.jsx')
+      const result = await validateAnimationDir('package.json')
       
       expect(result.valid).toBe(false)
       expect(result.errors.some(e => e.includes('not a directory'))).toBe(true)

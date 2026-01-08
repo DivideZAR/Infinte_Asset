@@ -54,7 +54,7 @@ interface HtmlResult {
   config: AnimationConfig
 }
 
-function stripExports(code) {
+function stripExports(code: any) {
   let result = code
   
   result = result.replace(/export\s+default\s+/g, '')
@@ -201,11 +201,12 @@ async function validateAnimationForHtml(animationDir: string): Promise<{ valid: 
   }
   
   if (!hasReactImport) {
-    result.warnings = result.warnings || []
-    result.warnings.push('No React import found - the code may not work correctly')
+    ;(result as any).warnings = (result as any).warnings || []
+    ;(result as any).warnings.push('No React import found - the code may not work correctly')
   }
   
   return result
 }
 
-export { generateHtml, validateAnimationForHtml, HtmlResult, AnimationConfig, DEFAULT_CONFIG }
+export { generateHtml, validateAnimationForHtml, DEFAULT_CONFIG }
+export type { HtmlResult, AnimationConfig }
