@@ -39,13 +39,16 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 </head>
 <body>
   <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    {REACT_SOURCE}
+  </script>
+  <script>
+    {REACT_DOM_SOURCE}
+  </script>
   <script>
     const { useState, useEffect, useRef, useCallback, useMemo, useContext, useReducer } = React;
   </script>
-  <script type="text/babel" data-type="module">
+  <script type="module">
     {ANIMATION_CODE}
   </script>
 </body>
@@ -57,6 +60,7 @@ interface HtmlResult {
 }
 
 function transformCode(code: string): { transformedCode: string; mainComponentName: string | null } {
+  // First pass: custom transformations (strip imports/exports)
   const sourceFile = ts.createSourceFile('temp.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const reactHooks = new Set<string>()
   let mainComponentName: string | null = null
@@ -68,37 +72,27 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
         if (ts.isImportDeclaration(node)) {
           const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text
           if (moduleSpecifier === 'react' && node.importClause) {
-            // Collect named imports (hooks)
             if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
               node.importClause.namedBindings.elements.forEach((element) => {
                 reactHooks.add(element.name.text)
               })
             }
           }
-          // Remove all imports
           return undefined
         }
 
         // Handle Exports
         if (ts.isExportAssignment(node)) {
-          // export default App -> const App = ... (handled elsewhere or implicitly)
-          // For 'export default function App() {}', we want to strip 'export default'
-          // Since it's an assignment, usually it's `export default identifier;`
-          // We can remove it, assuming the identifier is defined elsewhere.
            if (ts.isIdentifier(node.expression)) {
                mainComponentName = node.expression.text;
            }
           return undefined
         }
         
-        // Handle 'export function', 'export const'
         if (ts.canHaveModifiers(node)) {
             const modifiers = ts.getModifiers(node);
             if (modifiers && modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword)) {
-                
-                // Check if it's the main component (simple heuristic: export default function)
                 const isDefault = modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword);
-                
                 if (isDefault) {
                      if (ts.isFunctionDeclaration(node) && node.name) {
                          mainComponentName = node.name.text;
@@ -108,11 +102,8 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
                      }
                 }
                 
-                // Strip the export keywords
                 const newModifiers = modifiers.filter(m => m.kind !== ts.SyntaxKind.ExportKeyword && m.kind !== ts.SyntaxKind.DefaultKeyword);
                 
-                // Create a clone of the node without export/default modifiers
-                // Note: TypeScript AST nodes are immutable-ish, we use factory to update
                  if (ts.isFunctionDeclaration(node)) {
                     return ts.factory.updateFunctionDeclaration(
                         node,
@@ -155,16 +146,24 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
 
   const result = ts.transform(sourceFile, [transformer])
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
-  let transformedCode = printer.printFile(result.transformed[0])
+  let intermediateCode = printer.printFile(result.transformed[0])
 
   // Prepend collected hooks
   if (reactHooks.size > 0) {
-    transformedCode = `const { ${Array.from(reactHooks).join(', ')} } = React;\n\n` + transformedCode
+    intermediateCode = `const { ${Array.from(reactHooks).join(', ')} } = React;\n\n` + intermediateCode
   }
   
-  // Fallback for component name if not found via export default
+  // Second pass: Transpile JSX to JS
+  const transpiled = ts.transpileModule(intermediateCode, {
+    compilerOptions: {
+      jsx: ts.JsxEmit.React,
+      target: ts.ScriptTarget.ES2020,
+      module: ts.ModuleKind.ESNext,
+    }
+  });
+
+  // Fallback for component name
   if (!mainComponentName) {
-      // Simple regex fallback to find likely component name if AST didn't catch explicit default export
       const match = code.match(/function\s+([A-Z]\w+)/) || code.match(/const\s+([A-Z]\w+)\s*=\s*\(/);
       if (match) {
           mainComponentName = match[1];
@@ -173,7 +172,7 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
       }
   }
 
-  return { transformedCode, mainComponentName }
+  return { transformedCode: transpiled.outputText, mainComponentName }
 }
 
 async function generateHtml(
@@ -184,6 +183,11 @@ async function generateHtml(
   const fullConfig = { ...DEFAULT_CONFIG, ...config }
 
   await fs.ensureDir(outputDir)
+
+  // Load vendor scripts
+  const vendorDir = path.join(process.cwd(), 'vendor');
+  const reactSource = await fs.readFile(path.join(vendorDir, 'react.production.min.js'), 'utf-8');
+  const reactDomSource = await fs.readFile(path.join(vendorDir, 'react-dom.production.min.js'), 'utf-8');
 
   const prebuiltHtmlPath = path.join(animationDir, 'index.html')
   if (await fs.pathExists(prebuiltHtmlPath)) {
@@ -206,7 +210,9 @@ async function generateHtml(
 
   const finalCode = transformedCode + `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that the animation is ready\nwindow.animationReady = true;`
 
-  const htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
+  let htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
+  htmlContent = htmlContent.replace('{REACT_SOURCE}', reactSource)
+  htmlContent = htmlContent.replace('{REACT_DOM_SOURCE}', reactDomSource)
 
   const htmlPath = path.join(outputDir, 'animation.html')
   await fs.writeFile(htmlPath, htmlContent)

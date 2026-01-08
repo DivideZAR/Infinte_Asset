@@ -51,6 +51,7 @@ Each task is represented as a JSON object:
 - ✅ Fix Jest configuration for proper module resolution (ESM support)
 - ✅ Create `git-agent` global CLI wrapper for Git_Agent
 - ✅ Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame`
+- ✅ Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (TypeScript API)
 
 ### Pending Tasks
 
@@ -60,8 +61,7 @@ Each task is represented as a JSON object:
 
 #### Medium Priority
 
-- [in_progress] Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (TypeScript API) for robust code transformation (Active Branch: `feat/ast-transform`)
-- [pending] Remove runtime CDN dependencies: Bundle React/Babel locally or pre-compile animations to support offline conversion
+- [in_progress] Remove runtime CDN dependencies: Bundle React/Babel locally or pre-compile animations to support offline conversion (Active Branch: `feat/offline-bundle`)
 
 #### Low Priority
 
