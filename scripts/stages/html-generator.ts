@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import fs from 'fs-extra'
 import path from 'path'
+import ts from 'typescript'
 
 interface AnimationConfig {
   width: number
@@ -55,63 +56,124 @@ interface HtmlResult {
   config: AnimationConfig
 }
 
-function stripExports(code: string) {
-  let result = code
+function transformCode(code: string): { transformedCode: string; mainComponentName: string | null } {
+  const sourceFile = ts.createSourceFile('temp.tsx', code, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const reactHooks = new Set<string>()
+  let mainComponentName: string | null = null
 
-  result = result.replace(/export\s+default\s+/g, '')
-  result = result.replace(/export\s+const\s+/g, 'const ')
-  result = result.replace(/export\s+function\s+/g, 'function ')
-  result = result.replace(/export\s+/g, '')
+  const transformer = (context: ts.TransformationContext) => {
+    return (rootNode: ts.SourceFile) => {
+      function visit(node: ts.Node): ts.Node | undefined {
+        // Handle Imports
+        if (ts.isImportDeclaration(node)) {
+          const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text
+          if (moduleSpecifier === 'react' && node.importClause) {
+            // Collect named imports (hooks)
+            if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
+              node.importClause.namedBindings.elements.forEach((element) => {
+                reactHooks.add(element.name.text)
+              })
+            }
+          }
+          // Remove all imports
+          return undefined
+        }
 
-  const reactImports: string[] = []
+        // Handle Exports
+        if (ts.isExportAssignment(node)) {
+          // export default App -> const App = ... (handled elsewhere or implicitly)
+          // For 'export default function App() {}', we want to strip 'export default'
+          // Since it's an assignment, usually it's `export default identifier;`
+          // We can remove it, assuming the identifier is defined elsewhere.
+           if (ts.isIdentifier(node.expression)) {
+               mainComponentName = node.expression.text;
+           }
+          return undefined
+        }
+        
+        // Handle 'export function', 'export const'
+        if (ts.canHaveModifiers(node)) {
+            const modifiers = ts.getModifiers(node);
+            if (modifiers && modifiers.some(m => m.kind === ts.SyntaxKind.ExportKeyword)) {
+                
+                // Check if it's the main component (simple heuristic: export default function)
+                const isDefault = modifiers.some(m => m.kind === ts.SyntaxKind.DefaultKeyword);
+                
+                if (isDefault) {
+                     if (ts.isFunctionDeclaration(node) && node.name) {
+                         mainComponentName = node.name.text;
+                     }
+                     if (ts.isClassDeclaration(node) && node.name) {
+                         mainComponentName = node.name.text;
+                     }
+                }
+                
+                // Strip the export keywords
+                const newModifiers = modifiers.filter(m => m.kind !== ts.SyntaxKind.ExportKeyword && m.kind !== ts.SyntaxKind.DefaultKeyword);
+                
+                // Create a clone of the node without export/default modifiers
+                // Note: TypeScript AST nodes are immutable-ish, we use factory to update
+                 if (ts.isFunctionDeclaration(node)) {
+                    return ts.factory.updateFunctionDeclaration(
+                        node,
+                        newModifiers.length ? newModifiers : undefined,
+                        node.asteriskToken,
+                        node.name,
+                        node.typeParameters,
+                        node.parameters,
+                        node.type,
+                        node.body
+                    );
+                }
+                
+                if (ts.isVariableStatement(node)) {
+                     return ts.factory.updateVariableStatement(
+                        node,
+                        newModifiers.length ? newModifiers : undefined,
+                         node.declarationList
+                     );
+                }
+                
+                if (ts.isClassDeclaration(node)) {
+                     return ts.factory.updateClassDeclaration(
+                        node,
+                        newModifiers.length ? newModifiers : undefined,
+                        node.name,
+                        node.typeParameters,
+                        node.heritageClauses,
+                        node.members
+                     );
+                }
+            }
+        }
 
-  const importReactBoth = result.match(
-    /import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/g,
-  )
-  if (importReactBoth) {
-    importReactBoth.forEach((match: string) => {
-      const hookMatch = match.match(
-        /import\s+React\s*,\s*\{\s*([^}]+)\s*\}\s*from\s+['"]react['"];?/,
-      )
-      if (hookMatch && hookMatch[1]) {
-        const hooks = hookMatch[1]
-          .split(',')
-          .map((h: string) => h.trim())
-          .filter((h: string) => h)
-        reactImports.push(...hooks)
+        return ts.visitEachChild(node, visit, context)
       }
-    })
-    result = result.replace(/import\s+React\s*,\s*\{\s*[^}]+\s*\}\s*from\s+['"]react['"];?/g, '')
+      return ts.visitNode(rootNode, visit) as ts.SourceFile
+    }
   }
 
-  const importReactOnly = result.match(/import\s+React\s+from\s+['"]react['"];?/g)
-  if (importReactOnly) {
-    result = result.replace(/import\s+React\s+from\s+['"]react['"];?/g, '')
-  }
+  const result = ts.transform(sourceFile, [transformer])
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed })
+  let transformedCode = printer.printFile(result.transformed[0])
 
-  const importHooksOnly = result.match(/import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]react['"];?/g)
-  if (importHooksOnly) {
-    importHooksOnly.forEach((match: string) => {
-      const hookMatch = match.match(/import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]react['"];?/)
-      if (hookMatch && hookMatch[1]) {
-        const hooks = hookMatch[1]
-          .split(',')
-          .map((h: string) => h.trim())
-          .filter((h: string) => h)
-        reactImports.push(...hooks)
+  // Prepend collected hooks
+  if (reactHooks.size > 0) {
+    transformedCode = `const { ${Array.from(reactHooks).join(', ')} } = React;\n\n` + transformedCode
+  }
+  
+  // Fallback for component name if not found via export default
+  if (!mainComponentName) {
+      // Simple regex fallback to find likely component name if AST didn't catch explicit default export
+      const match = code.match(/function\s+([A-Z]\w+)/) || code.match(/const\s+([A-Z]\w+)\s*=\s*\(/);
+      if (match) {
+          mainComponentName = match[1];
+      } else {
+          mainComponentName = 'App';
       }
-    })
-    result = result.replace(/import\s+\{\s*[^}]+\s*\}\s+from\s+['"]react['"];?/g, '')
   }
 
-  result = result.replace(/import\s+[^'"]+from\s+['"][^'"]+['"];?/g, '')
-
-  const uniqueHooks = [...new Set(reactImports)].filter((h: string) => h)
-  if (uniqueHooks.length > 0) {
-    result = `const { ${uniqueHooks.join(', ')} } = React;\n\n` + result
-  }
-
-  return result
+  return { transformedCode, mainComponentName }
 }
 
 async function generateHtml(
@@ -132,7 +194,6 @@ async function generateHtml(
   }
 
   const animationFiles = await collectAnimationFiles(animationDir)
-
   let combinedCode = ''
 
   for (const file of animationFiles) {
@@ -141,19 +202,11 @@ async function generateHtml(
     combinedCode += `// File: ${relativePath}\n${content}\n\n`
   }
 
-  combinedCode = stripExports(combinedCode)
+  const { transformedCode, mainComponentName } = transformCode(combinedCode)
 
-  const componentMatch =
-    combinedCode.match(/export\s+default\s+function\s+(\w+)/)?.[1] ||
-    combinedCode.match(/export\s+const\s+(\w+)\s*=/)?.[1] ||
-    combinedCode.match(/function\s+(\w+)\s*\(\s*\{[^}]*\}\s*\)/)?.[1] ||
-    combinedCode.match(/function\s+(\w+)\s*\(\s*props\s*\)/)?.[1] ||
-    combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
-    'App'
+  const finalCode = transformedCode + `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that the animation is ready\nwindow.animationReady = true;`
 
-  combinedCode += `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${componentMatch}));\n\n// Signal that the animation is ready\nwindow.animationReady = true;`
-
-  const htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', combinedCode)
+  const htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
 
   const htmlPath = path.join(outputDir, 'animation.html')
   await fs.writeFile(htmlPath, htmlContent)

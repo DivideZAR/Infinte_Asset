@@ -60,7 +60,7 @@ Each task is represented as a JSON object:
 
 #### Medium Priority
 
-- [pending] Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (SWC or Babel) for robust code transformation
+- [in_progress] Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (TypeScript API) for robust code transformation (Active Branch: `feat/ast-transform`)
 - [pending] Remove runtime CDN dependencies: Bundle React/Babel locally or pre-compile animations to support offline conversion
 
 #### Low Priority
