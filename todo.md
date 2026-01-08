@@ -53,6 +53,16 @@ Each task is represented as a JSON object:
 - ✅ Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame`
 - ✅ Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (TypeScript API)
 - ✅ Remove runtime CDN dependencies: Bundle React/ReactDOM locally and pre-compile JSX for offline conversion
+- ✅ Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing
+- ✅ Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions
+- ✅ Fix Capture Loop Precision: Remove arbitrary 500ms fast-forward and clean up unused console logs
+- ✅ Enhance AST Transformation: Support default/namespace imports for React and improve component name detection
+- ✅ Improve Cleanup Logic: Ensure temp directories are always removed, even on early failure
+- ✅ Canvas Optimization Safety: Handle multiple canvases correctly
+- ✅ Add Three.js support and conditional injection based on 3D detection
+- ✅ Fix Three.js template replacement bug: Prevent replacement of {THREE_SOURCE} inside library code
+- ✅ Add "Particle Burst" 2D animation for comprehensive testing
+- ✅ Add AI prompt template to project documentation
 
 ### Pending Tasks
 
@@ -63,21 +73,6 @@ Each task is represented as a JSON object:
 #### Medium Priority
 
 (No medium priority tasks currently pending)
-
-- ✅ Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing
-- ✅ Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions
-
-### Pending Tasks
-
-#### High Priority
-
-- [in_progress] Fix Capture Loop Precision: Remove arbitrary 500ms fast-forward and clean up unused console logs (Active Branch: `fix/code-review`)
-- [pending] Enhance AST Transformation: Support default/namespace imports for React and improve component name detection
-
-#### Medium Priority
-
-- [pending] Improve Cleanup Logic: Ensure temp directories are always removed, even on early failure
-- [pending] Canvas Optimization Safety: Handle multiple canvases correctly
 
 #### Low Priority
 
