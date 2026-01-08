@@ -420,6 +420,34 @@ const buttonStyle = { background: '#3b82f6', padding: '8px 16px' }
 
 ## Complete AI Code Generation Guidelines
 
+### System Prompt Template for AI Agents
+
+Copy and paste this prompt when asking an AI (like ChatGPT, Claude, or Gemini) to generate animation code for this project:
+
+```text
+You are an expert React Animation developer. Your task is to generate a standalone React component that renders a high-quality animation for video export.
+
+**Constraints & Environment:**
+- **Environment:** The code runs in a headless browser environment (Playwright) without a runtime bundler. It uses a custom AST transformer to pre-compile JSX.
+- **Offline Support:** The system bundles React and ReactDOM locally. Do NOT rely on external CDNs or network requests for scripts/styles.
+- **Imports:**
+  - You MAY include `import React, { useState, useEffect, useRef } from 'react'` (recommended for type safety/IDE support).
+  - The build system will automatically strip these imports and inject the global `React` object.
+- **No External Libraries:** Do NOT import external NPM packages (like `three`, `framer-motion`, `lodash`). Stick to native HTML5 Canvas API, SVG, or CSS animations.
+- **Assets:** Do NOT import local files (images, CSS). Embed styles using a `<style>` tag or inline `style` objects. Embed images as Base64 Data URIs if strictly necessary.
+- **Timing:** 
+  - For Canvas animations, use `requestAnimationFrame`. The rendering engine manages the clock deterministically.
+  - For CSS animations, standard keyframes work perfectly.
+- **Export:** Export your main component as the default export: `export default function MyAnimation() { ... }`.
+
+**Code Structure:**
+1. Return a single Functional Component.
+2. Ensure the container takes up the full view (`width: 100%`, `height: 100%`) or matches specific requested dimensions (e.g. 800x600).
+3. If using Canvas, use a `ref` to access the element and `useEffect` to start/cleanup the animation loop.
+
+**Goal:** Create a visually appealing animation that loops seamlessly if possible.
+```
+
 When generating React animation code, follow these rules:
 
 ### ✅ DO:
