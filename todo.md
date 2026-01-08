@@ -65,6 +65,7 @@ Each task is represented as a JSON object:
 (No medium priority tasks currently pending)
 
 - ✅ Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing
+- ✅ Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions
 
 ### Pending Tasks
 
@@ -78,7 +79,7 @@ Each task is represented as a JSON object:
 
 #### Low Priority
 
-- [in_progress] Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions (Active Branch: `docs/architecture`)
+(No low priority tasks currently pending)
 
 ## Notes
 
