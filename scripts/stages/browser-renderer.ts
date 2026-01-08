@@ -92,8 +92,11 @@ async function captureFrames(
 
     console.log(`Loading: file://${htmlPath}`)
 
+    // Use clock to control time for deterministic rendering
+    await page.clock.install()
+
     await page.goto(`file://${htmlPath}`, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'networkidle',
       timeout: 30000,
     })
 
@@ -108,10 +111,12 @@ async function captureFrames(
       console.warn('Animation ready signal not received, continuing anyway...')
     }
 
-    await page.waitForTimeout(1000)
+    // Give it a moment to finish initial React effect/rendering
+    await page.clock.fastForward(500)
 
     const totalFrames = Math.ceil(fullConfig.fps * fullConfig.duration)
     let frameCount = 0
+    const frameInterval = 1000 / fullConfig.fps
 
     console.log(`Capturing ${totalFrames} frames...`)
 
@@ -131,7 +136,8 @@ async function captureFrames(
           console.log(`Progress: ${i + 1}/${totalFrames} frames`)
         }
 
-        await page.waitForTimeout(200)
+        // Advance the clock by one frame interval
+        await page.clock.fastForward(frameInterval)
       } catch (error) {
         console.error(`Error capturing frame ${i + 1}:`, (error as Error).message)
         break

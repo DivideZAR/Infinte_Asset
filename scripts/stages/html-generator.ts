@@ -151,7 +151,7 @@ async function generateHtml(
     combinedCode.match(/function\s+(\w+)\s*\(/)?.[1] ||
     'App'
 
-  combinedCode += `\n\n// Auto-generated render call\nReactDOM.createRoot(document.getElementById('root')).render(React.createElement(${componentMatch}));`
+  combinedCode += `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${componentMatch}));\n\n// Signal that the animation is ready\nwindow.animationReady = true;`
 
   const htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', combinedCode)
 

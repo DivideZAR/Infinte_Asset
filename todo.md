@@ -50,12 +50,13 @@ Each task is represented as a JSON object:
 - ✅ Run final verification - ensure npm run lint, test, typecheck, build all pass
 - ✅ Fix Jest configuration for proper module resolution (ESM support)
 - ✅ Create `git-agent` global CLI wrapper for Git_Agent
+- ✅ Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame`
 
 ### Pending Tasks
 
 #### High Priority
 
-- [pending] Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame` to fix jitter and variable playback speed
+(No high priority tasks currently pending)
 
 #### Medium Priority
 
