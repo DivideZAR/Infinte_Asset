@@ -1,0 +1,1 @@
+[pending]{"id": "18", "content": "Fix Jest configuration for proper module resolution (ESM/CommonJS mismatch causing test failures)", "status": "pending", "priority": "high"}
