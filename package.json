@@ -1,6 +1,6 @@
 {
   "name": "infinte-asset",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Convert React animation code to MP4 video files using Node.js",
   "main": "dist/index.js",
   "type": "module",
