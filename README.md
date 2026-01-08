@@ -11,6 +11,8 @@ Convert React animation code to MP4 video files using Node.js with Playwright br
 - Stage-by-stage testing for debugging
 - Comprehensive test suite
 
+For a detailed deep-dive into how the system works, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Prerequisites
 
 - Node.js v18 or higher
