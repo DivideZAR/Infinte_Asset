@@ -52,6 +52,7 @@ Each task is represented as a JSON object:
 - ✅ Create `git-agent` global CLI wrapper for Git_Agent
 - ✅ Implement frame-by-frame synchronization: Sync browser capture loop with animation `requestAnimationFrame`
 - ✅ Refactor `html-generator.ts`: Replace fragile Regex-based `stripExports` with AST-based parsing (TypeScript API)
+- ✅ Remove runtime CDN dependencies: Bundle React/ReactDOM locally and pre-compile JSX for offline conversion
 
 ### Pending Tasks
 
@@ -61,11 +62,11 @@ Each task is represented as a JSON object:
 
 #### Medium Priority
 
-- [in_progress] Remove runtime CDN dependencies: Bundle React/Babel locally or pre-compile animations to support offline conversion (Active Branch: `feat/offline-bundle`)
+(No medium priority tasks currently pending)
 
 #### Low Priority
 
-- [pending] Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing
+- [in_progress] Optimize frame capture: Investigate `canvas.toDataURL()` or `MediaStream` API to replace slow screenshot capturing (Active Branch: `feat/optimize-capture`)
 - [pending] Document architecture: Create diagrams/docs for the `Git_Agent`, `Tester_Agent`, and Conversion Pipeline interactions
 
 ## Notes

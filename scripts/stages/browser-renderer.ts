@@ -120,15 +120,36 @@ async function captureFrames(
 
     console.log(`Capturing ${totalFrames} frames...`)
 
+    // Check if a canvas element exists for optimized capture
+    const hasCanvas = await page.evaluate(() => !!document.querySelector('canvas'))
+    console.log(`Optimization: ${hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'}`)
+
     for (let i = 0; i < totalFrames; i++) {
       const framePath = path.join(frameDir, `frame_${String(i).padStart(4, '0')}.png`)
 
       try {
-        await page.screenshot({
-          path: framePath,
-          fullPage: false,
-          timeout: 60000,
-        })
+        if (hasCanvas) {
+          // Optimized: Get base64 data directly from canvas
+          const dataUrl = await page.evaluate(() => {
+            const canvas = document.querySelector('canvas')
+            return canvas ? canvas.toDataURL('image/png') : null
+          })
+
+          if (dataUrl) {
+            const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '')
+            await fs.writeFile(framePath, base64Data, 'base64')
+          } else {
+            // Fallback if canvas disappeared or something went wrong
+            await page.screenshot({ path: framePath, fullPage: false })
+          }
+        } else {
+          // Standard: Full page screenshot
+          await page.screenshot({
+            path: framePath,
+            fullPage: false,
+            timeout: 60000,
+          })
+        }
 
         frameCount++
 
