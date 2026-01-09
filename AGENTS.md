@@ -1,131 +1,104 @@
 # Agent Guidelines for Infinte_Asset
 
-This project converts React animation code to MP4 video files using Node.js.
+Converts React animation code to MP4 video files using Node.js, Playwright, and FFmpeg.
 
 ## Build/Lint/Test Commands
 
 ```bash
-# Install dependencies
+# Dependencies & Setup
 npm install
 
-# Run development server (if applicable)
-npm run dev
+# Development & Build
+npm run dev              # Start dev server
+npm run build            # Build TypeScript to dist/
 
-# Lint code
-npm run lint
+# Code Quality
+npm run lint             # Run ESLint
+npm run lint:fix         # Auto-fix ESLint issues
+npm run typecheck        # TypeScript type checking
+npm run format           # Run Prettier
 
-# Type checking (if using TypeScript)
-npm run typecheck
+# Testing
+npm test                 # Run all tests (Jest, ESM mode, tests/ root)
+npm test -- path/to/test.test.js  # Run single test file
+npm test:watch           # Watch mode for TDD
+npm test:coverage        # Generate coverage report
 
-# Run all tests
-npm test
-
-# Run single test file
-npm test -- path/to/test.test.js
-
-# Run tests with specific pattern
-npm test -- --grep "animation.*conversion"
-
-# Build for production
-npm run build
-
-# Convert a React animation to MP4
-npm run convert -- input-dir output-file.mp4
-
-# Validate animation code before conversion
-npm run validate -- path/to/animation
+# Animation Conversion
+npm run convert -- input-dir output.mp4        # Convert animation
+npm run convert:pipeline -- input-dir output   # Full pipeline
+npm run validate -- path/to/animation          # Validate animation
 ```
 
 ## Technology Stack
 
-- **Runtime**: Node.js (v18+ recommended)
-- **Language**: JavaScript/TypeScript (prefer TypeScript)
-- **Frontend**: React (for animation code)
-- **Video Capture**: Puppeteer or Playwright (for recording)
-- **Video Encoding**: FFmpeg (via fluent-ffmpeg)
-- **Testing**: Jest or Vitest
+- **Runtime**: Node.js v18+ (ESM modules)
+- **Language**: TypeScript (strict mode enabled)
+- **Frontend**: React 18 with hooks
+- **Rendering**: Playwright (headless browser)
+- **Video**: FFmpeg (fluent-ffmpeg)
+- **Testing**: Jest with ESM support
 - **Linting**: ESLint + Prettier
 
 ## Project Structure
 
 ```
 /
-├── animations/          # React animation components
-│   └── example-animation/
-│       ├── index.jsx
-│       └── assets/
-├── scripts/             # Build and conversion scripts
-│   ├── convert.js
-│   └── validate.js
+├── animations/          # React animation components (index.jsx/tsx)
+├── scripts/             # Build & conversion scripts
+│   └── stages/          # Pipeline stages (html-generator, browser-renderer, video-encoder)
+├── tests/               # Jest tests (fixtures/, *.test.js)
+├── vendor/              # Bundled libraries (React, ReactDOM, Three.js)
 ├── output/              # Generated MP4 files
-├── tests/               # Test files
-├── package.json
-└── README.md            # User guide
+├── temp/                # Temporary build files
+└── src/                 # Main entry point
 ```
 
 ## Code Style Guidelines
 
 ### Imports
 
-- Use ES6 imports: `import React from 'react'`
-- Group imports in this order:
-  1. Node.js built-ins
-  2. External packages
-  3. Internal modules (with relative paths)
-- Use named exports for animations, default only for main components
+- ES6 imports only: `import React from 'react'`
+- Order: Node built-ins → external packages → internal modules
+- Use `@typescript-eslint/consistent-type-imports` (ESLint enforced)
 - Example:
   ```javascript
+  import fs from 'fs'
   import { exec } from 'child_process'
   import React from 'react'
-  import { AnimationWrapper } from '../components/wrapper'
+  import { validateSource } from '../scripts/validate'
   ```
 
-### Formatting
+### Formatting (Prettier)
 
-- Use Prettier with default settings
-- Maximum line length: 100 characters
-- Use single quotes for strings
-- Use trailing commas in multi-line objects/arrays
-- No semicolons (preferred) or consistent semicolons
+- Single quotes, 2 spaces, 100 char width
+- No semicolons, trailing commas in multi-line
+- Arrow parens always
+- Configured in `.prettierrc`
 
-### Types
+### Types (TypeScript)
 
-- Prefer TypeScript with strict mode enabled
-- Use interfaces for object shapes
-- Use type aliases for unions/primitives
+- Strict mode: `noImplicitAny`, `noImplicitReturns`, `noUnusedLocals`
+- Use interfaces for object shapes, type aliases for unions
 - Export types used by other modules
-- Avoid `any` - use `unknown` when type is truly unknown
-- Example:
-  ```typescript
-  interface ConversionOptions {
-    duration: number
-    fps: number
-    quality: 'low' | 'medium' | 'high'
-  }
-  ```
+- Avoid `any` - use `unknown` for truly unknown types
 
 ### Naming Conventions
 
-- **Files**: kebab-case for utilities, PascalCase for components
-  - `animation-validator.js`
-  - `AnimationWrapper.jsx`
-- **Variables/Functions**: camelCase
-  - `convertAnimation()`, `outputPath`
-- **Constants**: UPPER_SNAKE_CASE
-  - `MAX_VIDEO_DURATION`, `DEFAULT_FPS`
-- **Classes**: PascalCase
-  - `VideoConverter`, `AnimationRenderer`
-- **React Components**: PascalCase
-  - `AnimationPlayer`, `VideoExporter`
+- **Files**: kebab-case utilities (`animation-validator.ts`), PascalCase components (`AnimationPlayer.tsx`)
+- **Variables/Functions**: camelCase (`convertAnimation`, `outputPath`)
+- **Constants**: UPPER_SNAKE_CASE (`MAX_VIDEO_DURATION`, `DEFAULT_FPS`)
+- **Classes**: PascalCase (`VideoConverter`, `PipelineError`)
+- **React Components**: PascalCase (`AnimationPlayer`, `VideoExporter`)
 
 ### Error Handling
 
 - Always use async/await with try-catch for async operations
-- Create custom error classes for specific error types
-- Provide clear, actionable error messages
-- Log errors with context (using console.error or logging library)
+- Create custom error classes extending Error
+- Provide context in error messages
 - Validate inputs before processing
 - Example:
+
   ```javascript
   class ConversionError extends Error {
     constructor(message, public cause) {
@@ -133,7 +106,7 @@ npm run validate -- path/to/animation
       this.name = 'ConversionError'
     }
   }
-  
+
   async function convertAnimation(source) {
     try {
       validateSource(source)
@@ -144,76 +117,51 @@ npm run validate -- path/to/animation
   }
   ```
 
-### React Component Guidelines
+### React Components
 
 - Use functional components with hooks
-- Extract complex logic into custom hooks
-- Use TypeScript props interfaces
+- TypeScript props interfaces
 - Keep components focused on one responsibility
 - Use key props when rendering lists
-- Example:
-  ```typescript
-  interface AnimationPlayerProps {
-    source: string
-    autoPlay?: boolean
-    onComplete?: () => void
-  }
-  
-  export const AnimationPlayer: React.FC<AnimationPlayerProps> = ({
-    source,
-    autoPlay = true,
-    onComplete
-  }) => {
-    // Component logic
-  }
-  ```
 
-### Code Organization
+### Testing (Jest)
 
-- Keep functions small and focused (single responsibility)
-- Extract reusable logic into utility functions
-- Use JSDoc comments for public API functions
-- Avoid deeply nested code (max 3-4 levels)
-- Prefer composition over inheritance
-
-### Testing Guidelines
-
-- Write unit tests for utility functions
-- Write integration tests for conversion pipelines
-- Use descriptive test names (should describe the behavior)
+- Root: `tests/` directory
+- Pattern: `**/*.test.{js,ts}`
+- Use descriptive test names
 - Mock external dependencies (file system, browser automation)
 - Test error cases alongside success cases
-- Example:
-  ```javascript
-  describe('AnimationConverter', () => {
-    it('should convert valid animation to MP4', async () => {
-      const result = await convertAnimation(validSource)
-      expect(result.success).toBe(true)
-      expect(result.outputPath).toMatch(/\.mp4$/)
-    })
-    
-    it('should throw error for invalid animation', async () => {
-      await expect(
-        convertAnimation(invalidSource)
-      ).rejects.toThrow(ValidationError)
-    })
-  })
-  ```
+
+### ESLint Rules (Key Enforcement)
+
+- `@typescript-eslint/consistent-type-imports`: error
+- `@typescript-eslint/no-explicit-any`: warn
+- `@typescript-eslint/no-unused-vars`: error (ignore `^_` prefix)
+- `react/react-in-jsx-scope`: off
+- `import/order`: error (builtin, external, internal, parent, sibling, index, alphabetical)
+- `import/no-unresolved`: error
 
 ## Best Practices
 
-- Always handle cleanup (temp files, browser instances)
+- Always handle cleanup (temp files, browser instances) in finally blocks
 - Provide progress feedback for long-running operations
-- Use environment variables for configuration
 - Validate animation code before conversion (syntax, dependencies)
-- Document complex algorithms with inline comments
 - Use absolute paths when working with file system
-- Check for required tools (FFmpeg, Node.js) at startup
+- Check for required tools (FFmpeg, Playwright) at startup
+- Use JSDoc comments for public API functions
+- Avoid deeply nested code (max 3-4 levels)
 
-## Security Considerations
+## Security
 
 - Sanitize file paths to prevent directory traversal
 - Validate animation code to prevent code injection
 - Set timeouts for conversion processes
 - Don't expose system paths in error messages
 - Use safe temp file directories
+
+## Git Workflow
+
+- Create feature branches: `feature/name`, `fix/name`, `docs/name`
+- Use conventional commits: `type(scope): subject`
+- Run full test suite before commits: `npm run typecheck && npm run lint && npm test && npm run build`
+- Use `git-agent` CLI for git operations
