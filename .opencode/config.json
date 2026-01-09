@@ -42,6 +42,26 @@
           "sudo *": "deny"
         }
       }
+    },
+    "build": {
+      "mode": "primary",
+      "permission": {
+        "task": {
+          "*": "allow",
+          "git-agent": "allow",
+          "tester-agent": "allow"
+        }
+      }
+    },
+    "plan": {
+      "mode": "primary",
+      "permission": {
+        "task": {
+          "*": "allow",
+          "git-agent": "allow",
+          "tester-agent": "allow"
+        }
+      }
     }
   },
   "tool": {

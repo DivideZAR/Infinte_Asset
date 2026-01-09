@@ -13,6 +13,40 @@ Convert React animation code to MP4 video files using Node.js with Playwright br
 
 For a detailed deep-dive into how our system works, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+## OpenCode AI Agents
+
+This project includes configured OpenCode AI subagents for specialized tasks:
+
+### Git Agent (`@git-agent`)
+
+- **Purpose**: Git operations and repository management
+- **Capabilities**: Branch management, commits, merges, repository analysis
+- **Usage**: Automatically invoked for git-related tasks, or use `@git-agent [command]`
+
+### Tester Agent (`@tester-agent`)
+
+- **Purpose**: Testing pipeline and code quality validation
+- **Capabilities**: TypeScript checking, linting, test execution, build validation
+- **Usage**: Automatically invoked for testing tasks, or use `@tester-agent [command]`
+
+### Automatic Invocation
+
+Primary agents automatically invoke subagents when they encounter matching tasks:
+
+- Git-related tasks → `@git-agent`
+- Testing/validation tasks → `@tester-agent`
+
+### Manual Invocation
+
+Invoke subagents directly using `@` mentions:
+
+```bash
+@git-agent create a feature branch for user authentication
+@tester-agent run the full test suite and report issues
+```
+
+For detailed agent configuration, see [`.opencode/README.md`](.opencode/README.md).
+
 ## Prerequisites
 
 - Node.js v18 or higher
