@@ -72,6 +72,7 @@ Each task is represented as a JSON object:
 
 - [ ] Investigate white screen issue in output files
 - [ ] Fix the white screen issue
+- [ ] Update AGENTS.md to be more concise and accurate (~150 lines)
 
 #### Medium Priority
 
@@ -97,7 +98,7 @@ Each task is represented as a JSON object:
    - Comprehensive git operations subagent at scripts/Git_Agent.js
    - Now accessible globally via `git-agent` command
 
-3. Tester_Agent Created
+2. Tester_Agent Created
    - Comprehensive testing subagent at scripts/Tester_Agent.js
    - Can run typecheck, lint, tests, build
    - Integrates with todo tracking
