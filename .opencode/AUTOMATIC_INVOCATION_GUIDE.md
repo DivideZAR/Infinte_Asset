@@ -1,29 +1,38 @@
 # How Primary Agents Automatically Invoke Subagents
 
-## The Task Tool Mechanism
+## Understanding Automatic vs Manual Invocation
 
-Primary agents automatically invoke subagents through the **Task tool** when they encounter tasks that match subagent descriptions.
+### Why Automatic Invocation Might Not Work
 
-## How It Works
+**Primary agents handle simple tasks themselves** rather than delegating to subagents. Automatic invocation typically occurs for:
 
-1. **Task Recognition**: When you ask a primary agent to do something, it analyzes the task
-2. **Subagent Matching**: The agent checks if any subagent's description matches the task
-3. **Automatic Invocation**: If there's a match, the agent creates a child session for the subagent
-4. **Parallel Work**: The subagent works in its own session while the primary agent continues
-5. **Result Integration**: Results are brought back to the main conversation
+1. **Complex multi-step tasks** that require specialized expertise
+2. **Tasks requiring different models** or tool configurations
+3. **When the primary agent determines delegation is beneficial**
 
-## Example Usage
+For simple git status checks, the primary agent has all necessary tools and will handle it directly.
+
+## Manual Invocation (Most Reliable)
+
+Use **@ mentions** to explicitly invoke subagents:
 
 ```bash
-# This will likely invoke @git-agent automatically
-"Help me create a feature branch for adding user authentication"
-
-# This will likely invoke @tester-agent automatically
-"Run the full test suite and check code quality"
-
-# This might invoke both agents
-"Create a new feature branch, implement the feature, and run tests"
+@git-agent check git status and create a summary
+@tester-agent run the full test suite
+@git-agent create a feature branch for user authentication
 ```
+
+## When Automatic Invocation Does Work
+
+Automatic invocation typically triggers for:
+
+1. **Complex git operations**: Repository restructuring, complex merges
+2. **Advanced testing**: Full CI/CD pipeline validation
+3. **Specialized tasks**: Tasks requiring specific model capabilities
+
+## Testing Subagent Functionality
+
+The subagents are properly configured and will work when manually invoked or when automatic conditions are met.
 
 ## Task Permissions
 
