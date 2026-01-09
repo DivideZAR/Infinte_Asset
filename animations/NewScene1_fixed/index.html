@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Episode 1: The Delivery - The Influx</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+    #root { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function TheInfluxAnimation() {
+      const containerRef = useRef(null);
+      const animationRef = useRef(null);
+      const startTimeRef = useRef(null);
+      const [currentText, setCurrentText] = useState('');
+      const [showAlarm, setShowAlarm] = useState(false);
+      const [alarmFlash, setAlarmFlash] = useState(false);
+      const [glucoseLevel, setGlucoseLevel] = useState(2);
+
+      useEffect(() => {
+        if (!containerRef.current) return;
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0505);
+        scene.fog = new THREE.FogExp2(0x1a0808, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        containerRef.current.appendChild(renderer.domElement);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x442222, 0.6);
+        scene.add(ambientLight);
+
+        const mainLight = new THREE.DirectionalLight(0xff8866, 1.2);
+        mainLight.position.set(5, 15, 10);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+
+        const backLight = new THREE.PointLight(0xff4400, 1, 100);
+        backLight.position.set(-30, 5, 0);
+        scene.add(backLight);
+
+        const alarmLightObj = new THREE.PointLight(0xff0000, 0, 80);
+        alarmLightObj.position.set(0, 8, 0);
+        scene.add(alarmLightObj);
+
+        // Create the bloodstream tunnel
+        const tunnelLength = 120;
+        const tunnelRadius = 12;
+        
+        // Tunnel geometry - a cylinder
+        const tunnelGeometry = new THREE.CylinderGeometry(tunnelRadius, tunnelRadius, tunnelLength, 32, 1, true);
+        const tunnelMaterial = new THREE.MeshPhongMaterial({
+          color: 0x8b0000,
+          side: THREE.BackSide,
+          transparent: true,
+          opacity: 0.6,
+          emissive: 0x330000,
+          emissiveIntensity: 0.4
+        });
+        const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
+        tunnel.rotation.z = Math.PI / 2;
+        tunnel.position.x = 20;
+        scene.add(tunnel);
+
+        // Floor of the tunnel
+        const floorGeometry = new THREE.PlaneGeometry(tunnelLength, tunnelRadius * 1.5);
+        const floorMaterial = new THREE.MeshPhongMaterial({
+          color: 0x551122,
+          emissive: 0x220808,
+          emissiveIntensity: 0.3
+        });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(20, -tunnelRadius + 2, 0);
+        scene.add(floor);
+
+        // ============ BAY DOORS ============
+        // Door frame (the wall with the opening)
+        const frameWidth = 20;
+        const frameHeight = 18;
+        const doorWidth = 7;
+        
+        // Left wall section
+        const leftWallGeo = new THREE.BoxGeometry(5, frameHeight, tunnelRadius * 2);
+        const wallMaterial = new THREE.MeshPhongMaterial({ 
+          color: 0x444455,
+          emissive: 0x111122,
+          emissiveIntensity: 0.2
+        });
+        const leftWall = new THREE.Mesh(leftWallGeo, wallMaterial);
+        leftWall.position.set(-40, 0, 0);
+        scene.add(leftWall);
+
+        // Right wall section  
+        const rightWall = new THREE.Mesh(leftWallGeo, wallMaterial);
+        rightWall.position.set(-20, 0, 0);
+        scene.add(rightWall);
+
+        // Top section above doors
+        const topWallGeo = new THREE.BoxGeometry(frameWidth, 4, tunnelRadius * 2);
+        const topWall = new THREE.Mesh(topWallGeo, wallMaterial);
+        topWall.position.set(-30, frameHeight/2 - 2, 0);
+        scene.add(topWall);
+
+        // THE ACTUAL DOORS
+        const doorMaterial = new THREE.MeshPhongMaterial({
+          color: 0x556677,
+          emissive: 0x223344,
+          emissiveIntensity: 0.3,
+          metalness: 0.9
+        });
+
+        const doorGeometry = new THREE.BoxGeometry(doorWidth, frameHeight - 4, 1);
+        
+        const leftDoor = new THREE.Mesh(doorGeometry, doorMaterial.clone());
+        leftDoor.position.set(-30, -2, -doorWidth/2 - 0.5);
+        scene.add(leftDoor);
+
+        const rightDoor = new THREE.Mesh(doorGeometry, doorMaterial.clone());
+        rightDoor.position.set(-30, -2, doorWidth/2 + 0.5);
+        scene.add(rightDoor);
+
+        // Door details - warning stripes
+        const stripeGeometry = new THREE.PlaneGeometry(doorWidth, 1);
+        const stripeMaterial = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+        
+        for (let i = 0; i < 3; i++) {
+          const leftStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+          leftStripe.position.set(-30 + 0.51, -6 + i * 4, -doorWidth/2 - 0.5);
+          leftStripe.rotation.y = Math.PI;
+          leftDoor.add(leftStripe.clone());
+          
+          const rightStripe = new THREE.Mesh(stripeGeometry, stripeMaterial);
+          rightStripe.position.set(-30 + 0.51, -6 + i * 4, doorWidth/2 + 0.5);
+          rightDoor.add(rightStripe.clone());
+        }
+
+        // Stomach sector backdrop (behind doors)
+        const stomachGeometry = new THREE.PlaneGeometry(40, 30);
+        const stomachMaterial = new THREE.MeshPhongMaterial({
+          color: 0x3a1515,
+          emissive: 0x220808,
+          emissiveIntensity: 0.5
+        });
+        const stomachBackdrop = new THREE.Mesh(stomachGeometry, stomachMaterial);
+        stomachBackdrop.position.set(-50, 0, 0);
+        stomachBackdrop.rotation.y = Math.PI / 2;
+        scene.add(stomachBackdrop);
+
+        // ============ GLUCOSE CUBES ============
+        const glucoseCubes = [];
+        const cubeCount = 300;
+        
+        for (let i = 0; i < cubeCount; i++) {
+          const size = 0.6 + Math.random() * 0.4;
+          const geometry = new THREE.BoxGeometry(size, size, size);
+          const material = new THREE.MeshPhongMaterial({
+            color: 0xffd700,
+            emissive: 0xffaa00,
+            emissiveIntensity: 0.9,
+            transparent: true,
+            opacity: 0.95
+          });
+          
+          const cube = new THREE.Mesh(geometry, material);
+          
+          // Start position - behind the doors in the stomach area
+          cube.position.set(
+            -55 - Math.random() * 15,
+            -8 + Math.random() * 12,
+            (Math.random() - 0.5) * 14
+          );
+          
+          cube.userData = {
+            startX: cube.position.x,
+            startY: cube.position.y,
+            startZ: cube.position.z,
+            speed: 0.15 + Math.random() * 0.25,
+            rotSpeed: (Math.random() - 0.5) * 0.15,
+            delay: i * 0.03, // Staggered release
+            active: false,
+            phase: Math.random() * Math.PI * 2
+          };
+          
+          cube.visible = false; // Hidden initially
+          glucoseCubes.push(cube);
+          scene.add(cube);
+        }
+
+        // ============ ALARM LIGHTS ============
+        const alarmLights = [];
+        const alarmPositions = [
+          [-25, 8, 8], [-25, 8, -8], 
+          [0, 8, 8], [0, 8, -8],
+          [25, 8, 8], [25, 8, -8],
+          [50, 8, 8], [50, 8, -8]
+        ];
+        
+        alarmPositions.forEach(pos => {
+          const alarmGeo = new THREE.SphereGeometry(0.6, 16, 16);
+          const alarmMat = new THREE.MeshBasicMaterial({ color: 0x330000 });
+          const alarm = new THREE.Mesh(alarmGeo, alarmMat);
+          alarm.position.set(...pos);
+          alarmLights.push(alarm);
+          scene.add(alarm);
+        });
+
+        // ============ WALL CRACKS ============
+        const cracks = [];
+        for (let i = 0; i < 25; i++) {
+          const crackGeo = new THREE.PlaneGeometry(0.3, 1.5 + Math.random() * 2);
+          const crackMat = new THREE.MeshBasicMaterial({
+            color: 0xff3300,
+            transparent: true,
+            opacity: 0,
+            side: THREE.DoubleSide
+          });
+          const crack = new THREE.Mesh(crackGeo, crackMat);
+          
+          const angle = Math.random() * Math.PI * 2;
+          crack.position.set(
+            -20 + Math.random() * 80,
+            -5 + Math.random() * 10,
+            Math.cos(angle) * (tunnelRadius - 1)
+          );
+          crack.rotation.set(
+            Math.random() * 0.5,
+            angle,
+            Math.random() * 0.8 - 0.4
+          );
+          cracks.push(crack);
+          scene.add(crack);
+        }
+
+        // ============ PARTICLES ============
+        const particleCount = 400;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          particlePositions[i] = (Math.random() - 0.5) * 100;
+          particlePositions[i + 1] = (Math.random() - 0.5) * 20;
+          particlePositions[i + 2] = (Math.random() - 0.5) * 20;
+        }
+        
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({
+          color: 0xff6644,
+          size: 0.15,
+          transparent: true,
+          opacity: 0.5
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // ============ ANIMATION LOOP ============
+        const DURATION = 30000;
+        let doorProgress = 0;
+        let lastReset = 0;
+
+        const animate = (timestamp) => {
+          if (!startTimeRef.current) startTimeRef.current = timestamp;
+          const elapsed = timestamp - startTimeRef.current;
+          const timeInSeconds = (elapsed % DURATION) / 1000;
+
+          // Reset logic
+          if (elapsed - lastReset > DURATION) {
+            lastReset = elapsed;
+            doorProgress = 0;
+            leftDoor.position.z = -doorWidth/2 - 0.5;
+            rightDoor.position.z = doorWidth/2 + 0.5;
+            
+            glucoseCubes.forEach(cube => {
+              cube.visible = false;
+              cube.userData.active = false;
+              cube.position.set(
+                cube.userData.startX,
+                cube.userData.startY,
+                cube.userData.startZ
+              );
+            });
+            
+            cracks.forEach(crack => {
+              crack.material.opacity = 0;
+            });
+            
+            setShowAlarm(false);
+            setGlucoseLevel(2);
+          }
+
+          // ============ CAMERA ANIMATION ============
+          if (timeInSeconds < 5) {
+            // Opening shot - looking at the doors
+            camera.position.set(-25, 2, 20);
+            camera.lookAt(-30, 0, 0);
+          } else if (timeInSeconds < 10) {
+            // Move to see doors opening and glucose coming through
+            const t = (timeInSeconds - 5) / 5;
+            camera.position.x = THREE.MathUtils.lerp(-25, -15, t);
+            camera.position.y = THREE.MathUtils.lerp(2, 5, t);
+            camera.position.z = THREE.MathUtils.lerp(20, 18, t);
+            camera.lookAt(-30 + t * 10, 0, 0);
+          } else if (timeInSeconds < 20) {
+            // Pull back to show the flood
+            const t = (timeInSeconds - 10) / 10;
+            camera.position.x = THREE.MathUtils.lerp(-15, 10, t);
+            camera.position.y = THREE.MathUtils.lerp(5, 8, t);
+            camera.position.z = THREE.MathUtils.lerp(18, 25, t);
+            camera.lookAt(THREE.MathUtils.lerp(-20, 10, t), 0, 0);
+          } else {
+            // Final dramatic shot
+            const t = (timeInSeconds - 20) / 10;
+            camera.position.x = THREE.MathUtils.lerp(10, 30, t);
+            camera.position.y = 8 + Math.sin(timeInSeconds * 2) * 0.5;
+            camera.position.z = 25 + Math.sin(timeInSeconds) * 3;
+            camera.lookAt(15, 0, 0);
+          }
+
+          // ============ ALARM ACTIVATION (3 seconds) ============
+          if (timeInSeconds > 3) {
+            setShowAlarm(true);
+            const flash = Math.sin(elapsed * 0.015) > 0;
+            setAlarmFlash(flash);
+            
+            alarmLightObj.intensity = flash ? 2.5 : 0.3;
+            alarmLights.forEach(light => {
+              light.material.color.setHex(flash ? 0xff3300 : 0x440000);
+            });
+          }
+
+          // ============ DOOR OPENING (5 seconds) ============
+          if (timeInSeconds > 5 && doorProgress < 1) {
+            doorProgress = Math.min(1, (timeInSeconds - 5) / 2.5);
+            const eased = 1 - Math.pow(1 - doorProgress, 3); // Ease out
+            
+            // Doors slide apart on Z axis
+            leftDoor.position.z = THREE.MathUtils.lerp(-doorWidth/2 - 0.5, -tunnelRadius + 2, eased);
+            rightDoor.position.z = THREE.MathUtils.lerp(doorWidth/2 + 0.5, tunnelRadius - 2, eased);
+          }
+
+          // ============ GLUCOSE FLOOD (7 seconds) ============
+          if (timeInSeconds > 7) {
+            const floodTime = timeInSeconds - 7;
+            
+            glucoseCubes.forEach((cube, i) => {
+              // Activate cubes based on their delay
+              if (floodTime > cube.userData.delay && !cube.userData.active) {
+                cube.userData.active = true;
+                cube.visible = true;
+              }
+              
+              if (cube.userData.active) {
+                // Move through the doors and into the bloodstream
+                const targetX = 60 + (i % 30) * 2;
+                
+                if (cube.position.x < targetX) {
+                  // Speed decreases as traffic builds up (jam effect)
+                  const jamFactor = Math.max(0.2, 1 - (cube.position.x + 30) / 90);
+                  cube.position.x += cube.userData.speed * jamFactor;
+                  
+                  // Constrain to tunnel after passing doors
+                  if (cube.position.x > -28) {
+                    // Slight drift
+                    cube.position.y += Math.sin(elapsed * 0.003 + cube.userData.phase) * 0.015;
+                    cube.position.z += Math.cos(elapsed * 0.002 + cube.userData.phase) * 0.01;
+                    
+                    // Keep within tunnel bounds
+                    const maxY = tunnelRadius - 4;
+                    const maxZ = tunnelRadius - 3;
+                    cube.position.y = THREE.MathUtils.clamp(cube.position.y, -maxY, maxY - 5);
+                    cube.position.z = THREE.MathUtils.clamp(cube.position.z, -maxZ, maxZ);
+                  }
+                }
+                
+                // Rotation
+                cube.rotation.x += cube.userData.rotSpeed;
+                cube.rotation.y += cube.userData.rotSpeed * 0.7;
+                
+                // Pulsing glow
+                cube.material.emissiveIntensity = 0.7 + Math.sin(elapsed * 0.004 + i) * 0.3;
+              }
+            });
+            
+            // Update glucose level indicator
+            const level = Math.min(10, Math.floor(2 + floodTime * 0.5));
+            setGlucoseLevel(level);
+          }
+
+          // ============ WALL STRESS (15 seconds) ============
+          if (timeInSeconds > 15) {
+            const stress = (timeInSeconds - 15) / 15;
+            
+            // Tunnel vibration
+            tunnel.position.x = 20 + Math.sin(elapsed * 0.03) * stress * 0.5;
+            tunnel.position.y = Math.cos(elapsed * 0.025) * stress * 0.3;
+            
+            // Wall color change
+            tunnelMaterial.emissiveIntensity = 0.4 + stress * 0.4;
+            
+            // Cracks appear
+            cracks.forEach((crack, i) => {
+              const crackDelay = i * 0.04;
+              crack.material.opacity = Math.min(1, Math.max(0, (stress - crackDelay) * 2));
+              crack.scale.y = 1 + Math.sin(elapsed * 0.02 + i) * 0.3 * stress;
+            });
+          }
+
+          // ============ PARTICLE FLOW ============
+          const positions = particles.geometry.attributes.position.array;
+          for (let i = 0; i < positions.length; i += 3) {
+            positions[i] += 0.05;
+            if (positions[i] > 50) positions[i] = -50;
+          }
+          particles.geometry.attributes.position.needsUpdate = true;
+
+          // ============ TEXT UPDATES ============
+          if (timeInSeconds < 3) {
+            setCurrentText('');
+          } else if (timeInSeconds < 7) {
+            setCurrentText('⚠ INCOMING CARGO ⚠');
+          } else if (timeInSeconds < 15) {
+            setCurrentText('"The system is flooded..."');
+          } else if (timeInSeconds < 23) {
+            setCurrentText('"Pressure is critical..."');
+          } else {
+            setCurrentText('"If we don\'t move this cargo, the whole structure collapses."');
+          }
+
+          renderer.render(scene, camera);
+          animationRef.current = requestAnimationFrame(animate);
+        };
+
+        animationRef.current = requestAnimationFrame(animate);
+
+        const handleResize = () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+          cancelAnimationFrame(animationRef.current);
+          window.removeEventListener('resize', handleResize);
+          if (containerRef.current && renderer.domElement) {
+            containerRef.current.removeChild(renderer.domElement);
+          }
+          renderer.dispose();
+        };
+      }, []);
+
+      const levelBars = '▓'.repeat(glucoseLevel) + '░'.repeat(10 - glucoseLevel);
+
+      return (
+        <div style={{ width: '100%', height: '100%', position: 'relative', background: '#000' }}>
+          <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+          
+          {showAlarm && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none',
+              background: alarmFlash ? 'rgba(255, 0, 0, 0.08)' : 'transparent',
+              transition: 'background 0.1s'
+            }} />
+          )}
+
+          <div style={{
+            position: 'absolute',
+            top: 20,
+            left: 20,
+            color: '#ff6644',
+            fontSize: '14px',
+            fontFamily: 'monospace',
+            textShadow: '0 0 10px #ff4422',
+            background: 'rgba(0,0,0,0.5)',
+            padding: '10px 15px',
+            borderRadius: '4px',
+            border: '1px solid rgba(255,100,68,0.3)'
+          }}>
+            <div style={{ marginBottom: 5 }}>SECTOR: STOMACH</div>
+            <div style={{ marginBottom: 5 }}>STATUS: {showAlarm ? '⚠ CRITICAL' : 'STANDBY'}</div>
+            <div>GLUCOSE: [{levelBars}]</div>
+          </div>
+
+          {showAlarm && (
+            <div style={{
+              position: 'absolute',
+              top: 20,
+              right: 20,
+              padding: '12px 24px',
+              background: alarmFlash ? 'rgba(255, 0, 0, 0.9)' : 'rgba(100, 0, 0, 0.9)',
+              color: '#fff',
+              fontFamily: 'monospace',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              borderRadius: 4,
+              boxShadow: alarmFlash ? '0 0 40px rgba(255, 0, 0, 0.8)' : '0 0 10px rgba(100, 0, 0, 0.5)',
+              border: '2px solid #ff3300'
+            }}>
+              ⚠ INCOMING CARGO ⚠
+            </div>
+          )}
+
+          {currentText && (
+            <div style={{
+              position: 'absolute',
+              bottom: 80,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '18px 36px',
+              background: 'rgba(0, 0, 0, 0.85)',
+              color: '#fff',
+              fontFamily: 'Georgia, serif',
+              fontSize: '22px',
+              fontStyle: 'italic',
+              borderRadius: 8,
+              maxWidth: '85%',
+              textAlign: 'center',
+              border: '1px solid rgba(255, 100, 68, 0.5)',
+              boxShadow: '0 0 30px rgba(255, 100, 68, 0.3)'
+            }}>
+              {currentText}
+            </div>
+          )}
+
+          <div style={{
+            position: 'absolute',
+            bottom: 20,
+            left: 20,
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '12px',
+            fontFamily: 'monospace'
+          }}>
+            EPISODE 1: THE DELIVERY | Scene 1: The Influx
+          </div>
+        </div>
+      );
+    }
+
+    if (typeof module !== 'undefined') {
+      module.exports = TheInfluxAnimation;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<TheInfluxAnimation />);
+  </script>
+</body>
+</html>

@@ -429,11 +429,11 @@ You are an expert React Animation developer. Your task is to generate a standalo
 
 **Constraints & Environment:**
 - **Environment:** The code runs in a headless browser environment (Playwright) without a runtime bundler. It uses a custom AST transformer to pre-compile JSX.
-- **Offline Support:** The system bundles React and ReactDOM locally. Do NOT rely on external CDNs or network requests for scripts/styles.
+- **Offline Support:** The system bundles React, ReactDOM, and **Three.js** locally. Do NOT rely on external CDNs or network requests for scripts/styles.
 - **Imports:**
-  - You MAY include `import React, { useState, useEffect, useRef } from 'react'` (recommended for type safety/IDE support).
-  - The build system will automatically strip these imports and inject the global `React` object.
-- **No External Libraries:** Do NOT import external NPM packages (like `three`, `framer-motion`, `lodash`). Stick to native HTML5 Canvas API, SVG, or CSS animations.
+  - You MAY include `import React, { useState, useEffect, useRef } from 'react'` and `import * as THREE from 'three'`.
+  - The build system will automatically strip these imports and inject the global `React` and `THREE` objects.
+- **No External Libraries:** Do NOT import other external NPM packages. Stick to native HTML5 Canvas API, SVG, CSS animations, or **Three.js**.
 - **Assets:** Do NOT import local files (images, CSS). Embed styles using a `<style>` tag or inline `style` objects. Embed images as Base64 Data URIs if strictly necessary.
 - **Timing:** 
   - For Canvas animations, use `requestAnimationFrame`. The rendering engine manages the clock deterministically.

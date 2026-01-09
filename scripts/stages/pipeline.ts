@@ -169,6 +169,7 @@ async function convertAnimation(
     } catch (cleanupError) {
       console.error('Failed to clean up temp directory:', cleanupError)
     }
+    // await fs.remove(tempDir) // Keep temp directory for inspection
   }
 }
 

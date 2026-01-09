@@ -63,12 +63,15 @@ Each task is represented as a JSON object:
 - ✅ Fix Three.js template replacement bug: Prevent replacement of {THREE_SOURCE} inside library code
 - ✅ Add "Particle Burst" 2D animation for comprehensive testing
 - ✅ Add AI prompt template to project documentation
+- ✅ Check with git agent to maintain best practices
+- ✅ Update project todo.md
 
 ### Pending Tasks
 
 #### High Priority
 
-(No high priority tasks currently pending)
+- [ ] Investigate white screen issue in output files
+- [ ] Fix the white screen issue
 
 #### Medium Priority
 

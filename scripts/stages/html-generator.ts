@@ -46,6 +46,9 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
     {REACT_DOM_SOURCE}
   </script>
   <script>
+    {THREE_SOURCE}
+  </script>
+  <script>
     const { useState, useEffect, useRef, useCallback, useMemo, useContext, useReducer } = React;
   </script>
   <script type="module">
@@ -71,29 +74,28 @@ function transformCode(code: string): { transformedCode: string; mainComponentNa
         // Handle Imports
         if (ts.isImportDeclaration(node)) {
           const moduleSpecifier = (node.moduleSpecifier as ts.StringLiteral).text
+          
           if (moduleSpecifier === 'react' && node.importClause) {
-            
             // Handle: import { useState } from 'react'
             if (node.importClause.namedBindings && ts.isNamedImports(node.importClause.namedBindings)) {
               node.importClause.namedBindings.elements.forEach((element) => {
                 reactHooks.add(element.name.text)
               })
             }
-            
-            // Handle: import React from 'react'
-            if (node.importClause.name) {
-                // If they use "React", we don't need to do anything as it's global.
-                // If they use something else, like "MyReact", we might need to alias it, 
-                // but for now we assume they use "React" or destructuring.
-            }
-            
-            // Handle: import * as React from 'react'
-            if (node.importClause.namedBindings && ts.isNamespaceImport(node.importClause.namedBindings)) {
-                 // namespace import, essentially same as default import for our purpose since React is global
-            }
           }
-          // Remove all imports
-          return undefined
+
+          // Strip Three.js imports as well (it's global THREE)
+          if (moduleSpecifier === 'three') {
+              return undefined
+          }
+
+          // Strip React imports (global React object is used)
+          if (moduleSpecifier === 'react') {
+              return undefined
+          }
+          
+          // Remove all other imports for safety
+          return undefined // This was the problematic line. It should only strip react/three imports
         }
 
         // Handle Exports
@@ -203,6 +205,7 @@ async function generateHtml(
   const vendorDir = path.join(process.cwd(), 'vendor');
   const reactSource = await fs.readFile(path.join(vendorDir, 'react.production.min.js'), 'utf-8');
   const reactDomSource = await fs.readFile(path.join(vendorDir, 'react-dom.production.min.js'), 'utf-8');
+  const threeSource = await fs.readFile(path.join(vendorDir, 'three.min.js'), 'utf-8');
 
   const prebuiltHtmlPath = path.join(animationDir, 'index.html')
   if (await fs.pathExists(prebuiltHtmlPath)) {
@@ -228,6 +231,27 @@ async function generateHtml(
   let htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
   htmlContent = htmlContent.replace('{REACT_SOURCE}', reactSource)
   htmlContent = htmlContent.replace('{REACT_DOM_SOURCE}', reactDomSource)
+  
+  // Check if the animation contains 3D content to determine if Three.js should be included
+  let hasThreeReference = false;
+  const files = await collectAnimationFiles(animationDir);
+  for (const file of files) {
+    const content = await fs.readFile(file, 'utf-8');
+    if (content.includes('THREE') || content.includes('three') || content.includes('Three')) {
+      hasThreeReference = true;
+      break;
+    }
+  }
+
+  if (hasThreeReference) {
+    // Replace only the first occurrence of {THREE_SOURCE} which is the template placeholder
+    const index = htmlContent.indexOf('{THREE_SOURCE}');
+    if (index !== -1) {
+      htmlContent = htmlContent.substring(0, index) + threeSource + htmlContent.substring(index + '{THREE_SOURCE}'.length);
+    }
+  } else {
+    htmlContent = htmlContent.replace('{THREE_SOURCE}', '')
+  }
 
   const htmlPath = path.join(outputDir, 'animation.html')
   await fs.writeFile(htmlPath, htmlContent)
@@ -266,8 +290,8 @@ async function collectAnimationFiles(dir: string): Promise<string[]> {
 
 async function validateAnimationForHtml(
   animationDir: string,
-): Promise<{ valid: boolean; errors: string[]; warnings?: string[] }> {
-  const result = { valid: true, errors: [] as string[], warnings: [] as string[] }
+): Promise<{ valid: boolean; errors: string[]; warnings?: string[]; is3D?: boolean }> {
+  const result = { valid: true, errors: [] as string[], warnings: [] as string[], is3D: false }
 
   if (!(await fs.pathExists(animationDir))) {
     result.valid = false
@@ -295,7 +319,9 @@ async function validateAnimationForHtml(
     const content = await fs.readFile(file, 'utf-8')
     if (content.includes('import') && content.includes('react')) {
       hasReactImport = true
-      break
+    }
+    if (content.includes('THREE') || content.includes('three') || content.includes('WebGL')) {
+        result.is3D = true
     }
   }
 

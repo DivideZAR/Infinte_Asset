@@ -2,9 +2,9 @@ node_modules/
 dist/
 build/
 coverage/
+temp/
 output/
 test-output/
-temp/
 .env
 .env.local
 *.log
@@ -12,3 +12,6 @@ temp/
 .vscode/
 .idea/
 session-ses_*.md
+*.swp
+*.bak
+*:Zone.Identifier
