@@ -1,0 +1,64 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "agent": {
+    "git-agent": {
+      "description": "Git operations and repository management",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "bash": true,
+        "read": true,
+        "write": true,
+        "edit": true
+      },
+      "permission": {
+        "bash": {
+          "*": "allow",
+          "rm -rf /": "deny",
+          "sudo rm -rf *": "deny",
+          "format*": "deny",
+          "fdisk*": "deny"
+        }
+      }
+    },
+    "tester-agent": {
+      "description": "Testing pipeline and code quality validation",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-20250514",
+      "temperature": 0.1,
+      "tools": {
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "webfetch": false
+      },
+      "permission": {
+        "bash": {
+          "*": "allow",
+          "npm publish": "deny",
+          "git push --force": "deny",
+          "rm -rf /": "deny",
+          "sudo *": "deny"
+        }
+      }
+    }
+  },
+  "tool": {
+    "write": {
+      "enabled": true
+    },
+    "edit": {
+      "enabled": true
+    },
+    "bash": {
+      "enabled": true
+    },
+    "read": {
+      "enabled": true
+    },
+    "grep": {
+      "enabled": true
+    }
+  }
+}
