@@ -117,13 +117,20 @@ async function captureFrames(
 
     console.log(`Capturing ${totalFrames} frames...`)
 
-    // Set up frame configuration
-    await page.evaluate(
-      (config) => {
-        window.__frameConfig = config
-      },
-      { fps: fullConfig.fps, duration: fullConfig.duration, isFrameBased: true },
-    )
+    // Check if animation has frame-based rendering infrastructure
+    const hasFrameBasedInfrastructure = await page.evaluate(() => {
+      return typeof window.__frameConfig !== 'undefined'
+    })
+
+    // Set up frame configuration if animation supports it
+    if (hasFrameBasedInfrastructure) {
+      await page.evaluate(
+        (config) => {
+          window.__frameConfig = config
+        },
+        { fps: fullConfig.fps, duration: fullConfig.duration, isFrameBased: true },
+      )
+    }
 
     // Check if a valid canvas element exists for optimized capture
     const hasCanvas = await page.evaluate(() => {

@@ -309,6 +309,42 @@ async function generateHtml(
         threeSource +
         htmlContent.substring(index + '{THREE_SOURCE}'.length)
     }
+
+    // Inject frame-based rendering infrastructure before closing body tag
+    const frameBasedScript = `
+    <script>
+      window.__frameConfig = {
+        fps: ${fullConfig.fps},
+        duration: ${fullConfig.duration},
+        isFrameBased: true
+      };
+      window.__animationScene = null;
+
+      window.renderFrame = function(frameNumber) {
+        if (!window.__animationScene) return;
+
+        const scene = window.__animationScene;
+        const fps = window.__frameConfig.fps || 30;
+
+        const rotationSpeedX = 0.02;
+        const rotationSpeedY = 0.03;
+
+        const time = frameNumber / fps;
+        const targetRotationX = time * (rotationSpeedX * 60);
+        const targetRotationY = time * (rotationSpeedY * 60);
+
+        if (scene.torusKnot) {
+          scene.torusKnot.rotation.x = targetRotationX;
+          scene.torusKnot.rotation.y = targetRotationY;
+        }
+
+        if (scene.renderer && scene.scene && scene.camera) {
+          scene.renderer.render(scene.scene, scene.camera);
+        }
+      };
+    </script>`
+
+    htmlContent = htmlContent.replace('</body>', `${frameBasedScript}\n</body>`)
   } else {
     htmlContent = htmlContent.replace('{THREE_SOURCE}', '')
   }
