@@ -283,11 +283,11 @@ async function generateHtml(
 
   const finalCode =
     transformedCode +
-    `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Hook up animation scene for frame-based rendering\nif (window.__animationScene && window.__frameConfig.isFrameBased) {\n  console.log('Frame-based rendering mode enabled');\n} else {\n  console.log('Continuous animation mode');\n}\n\n// Signal that the animation is ready\nwindow.animationReady = true;`
+    `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that animation is ready\nwindow.animationReady = true;`
 
   let htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
-  htmlContent = htmlContent.replace('{REACT_SOURCE}', reactSource)
-  htmlContent = htmlContent.replace('{REACT_DOM_SOURCE}', reactDomSource)
+  htmlContent = htmlContent.replace('@@REACT_SOURCE@@', reactSource)
+  htmlContent = htmlContent.replace('@@REACT_DOM_SOURCE@@', reactDomSource)
 
   // Check if the animation contains 3D content to determine if Three.js should be included
   let hasThreeReference = false
