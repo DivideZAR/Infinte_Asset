@@ -24,17 +24,20 @@ For a detailed deep-dive into how the system works, see [ARCHITECTURE.md](ARCHIT
 FFmpeg is a system-wide video encoding tool. Install it once and it works for all projects.
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt update
 sudo apt install ffmpeg
 ```
 
 **macOS (Homebrew):**
+
 ```bash
 brew install ffmpeg
 ```
 
 **Windows (Chocolatey):**
+
 ```bash
 choco install ffmpeg
 ```
@@ -50,26 +53,31 @@ npx playwright install chromium
 ## Installation
 
 1. Navigate to the project directory (where package.json is located):
+
    ```bash
    cd /path/to/infinte-asset
    ```
 
 2. Install Node.js dependencies:
+
    ```bash
    npm install
    ```
 
 3. Install FFmpeg:
+
    ```bash
    sudo apt update && sudo apt install ffmpeg
    ```
 
 4. Install Playwright browsers:
+
    ```bash
    npx playwright install chromium
    ```
 
 5. Verify installations:
+
    ```bash
    ffmpeg -version
    ```
@@ -81,13 +89,14 @@ npx playwright install chromium
 1. **Add your animation** to the `animations/` directory (see "Where to Add Animations" below)
 
 2. **Convert the example animations:**
+
    ```bash
    # Convert bouncing balls animation
    npm run convert:pipeline -- animations/example-animation output/demo.mp4 --fps 30 --duration 5 --quality high
-   
+
    # Convert beach ball animation
    npm run convert:pipeline -- animations/beach-ball output/beach-ball.mp4 --fps 30 --duration 5
-   
+
    # Convert pulsing circles animation
    npm run convert:pipeline -- animations/pulse-circles output/pulse.mp4 --fps 30 --duration 5
    ```
@@ -126,18 +135,20 @@ infinte-asset/
 
 **Included Example Animations:**
 
-| Animation | Description | Technique |
-|-----------|-------------|-----------|
-| `example-animation` | Bouncing colored balls | Canvas API |
-| `beach-ball` | Beach ball bouncing on sand | SVG + CSS animations |
-| `pulse-circles` | Pulsing colored circles | Canvas API |
+| Animation           | Description                 | Technique            |
+| ------------------- | --------------------------- | -------------------- |
+| `example-animation` | Bouncing colored balls      | Canvas API           |
+| `beach-ball`        | Beach ball bouncing on sand | SVG + CSS animations |
+| `pulse-circles`     | Pulsing colored circles     | Canvas API           |
 
 **To convert any animation:**
+
 ```bash
 npm run convert:pipeline -- animations/<name> output/video.mp4
 ```
 
 **Key directories:**
+
 - `animations/` - Place your React animation files here
 - `output/` - Converted MP4 files appear here
 - `scripts/stages/` - Pipeline implementation (do not modify)
@@ -165,11 +176,13 @@ animations/
 ### Steps to Add a New Animation
 
 1. Create a folder inside `animations/` with your animation name:
+
    ```bash
    mkdir animations/my-bouncing-balls
    ```
 
 2. Create your React component in `index.jsx` inside that folder:
+
    ```bash
    echo 'export function MyAnimation() { return <div>Hello</div> }' > animations/my-bouncing-balls/index.jsx
    ```
@@ -201,18 +214,20 @@ animations/
     └── assets/
         └── image.png           # Optional assets
 ```
+
 animations/
-├── example-animation/          # Canvas-based bouncing balls
-│   └── index.jsx
-├── beach-ball/                 # SVG beach ball with CSS animations
-│   └── index.jsx
-├── pulse-circles/              # Canvas-based pulsing circles
-│   └── index.jsx
-└── my-animation/               # Your custom animation
-    ├── index.jsx
-    └── assets/
-        └── image.png           # Optional assets
-```
+├── example-animation/ # Canvas-based bouncing balls
+│ └── index.jsx
+├── beach-ball/ # SVG beach ball with CSS animations
+│ └── index.jsx
+├── pulse-circles/ # Canvas-based pulsing circles
+│ └── index.jsx
+└── my-animation/ # Your custom animation
+├── index.jsx
+└── assets/
+└── image.png # Optional assets
+
+````
 
 ### Animation Code Guidelines
 
@@ -256,7 +271,7 @@ style={{
   transform: 'translateX(50px)',
   animation: 'bounce 1s infinite',
 }}
-```
+````
 
 ### Supported CSS Animation Syntax
 
@@ -345,12 +360,12 @@ export default BouncingBalls
 
 ```jsx
 // ❌ WON'T WORK - Node.js APIs
-import fs from 'fs'                    // File system access
-import path from 'path'                // Path manipulation
-import crypto from 'crypto'            // Cryptography
-import http from 'http'                // HTTP server
-import process from 'process'          // Process (limited)
-const data = require('./data')         // CommonJS require
+import fs from 'fs' // File system access
+import path from 'path' // Path manipulation
+import crypto from 'crypto' // Cryptography
+import http from 'http' // HTTP server
+import process from 'process' // Process (limited)
+const data = require('./data') // CommonJS require
 ```
 
 ### CSS Frameworks (Do Not Use Directly)
@@ -372,7 +387,7 @@ import './App.css'
 import styles from './App.module.css'
 
 // ✅ INSTEAD - Embed CSS in style tags
-<style>{`
+;<style>{`
   .container {
     display: flex;
     background: #1a1a2e;
@@ -420,7 +435,33 @@ const buttonStyle = { background: '#3b82f6', padding: '8px 16px' }
 
 ## Complete AI Code Generation Guidelines
 
-### System Prompt Template for AI Agents
+### Complete AI Code Generation Guidelines
+
+========================================
+🎯 COPY START HERE: AI SYSTEM PROMPT 🎯
+========================================
+
+Copy and paste this prompt when asking an AI (like ChatGPT, Claude, or Gemini) to generate animation code for this project.
+
+You are an expert React Animation developer. Your task is to generate a standalone React component that renders a high-quality animation for video export.
+
+========================================
+🎯 COPY END HERE: AI SYSTEM PROMPT 🎯
+========================================
+
+========================================
+🎯 COPY START HERE: AI SYSTEM PROMPT 🎯
+========================================
+
+Copy and paste this prompt when asking an AI (like ChatGPT, Claude, or Gemini) to generate animation code for this project.
+
+You are an expert React Animation developer. Your task is to generate a standalone React component that renders a high-quality animation for video export.
+
+========================================
+🎯 COPY END HERE: AI SYSTEM PROMPT 🎯
+========================================
+
+## System Prompt Template for AI Agents
 
 Copy and paste this prompt when asking an AI (like ChatGPT, Claude, or Gemini) to generate animation code for this project:
 
@@ -435,7 +476,7 @@ You are an expert React Animation developer. Your task is to generate a standalo
   - The build system will automatically strip these imports and inject the global `React` and `THREE` objects.
 - **No External Libraries:** Do NOT import other external NPM packages. Stick to native HTML5 Canvas API, SVG, CSS animations, or **Three.js**.
 - **Assets:** Do NOT import local files (images, CSS). Embed styles using a `<style>` tag or inline `style` objects. Embed images as Base64 Data URIs if strictly necessary.
-- **Timing:** 
+- **Timing:**
   - For Canvas animations, use `requestAnimationFrame`. The rendering engine manages the clock deterministically.
   - For CSS animations, standard keyframes work perfectly.
 - **Export:** Export your main component as the default export: `export default function MyAnimation() { ... }`.
@@ -453,31 +494,41 @@ When generating React animation code, follow these rules:
 ### ✅ DO:
 
 1. **Use React hooks for state and effects**
+
    ```jsx
    import React, { useState, useEffect, useRef } from 'react'
    ```
 
 2. **Use inline styles with JavaScript objects**
+
    ```jsx
    style={{ display: 'flex', backgroundColor: '#1a1a2e', color: '#ffffff' }}
    ```
 
 3. **Embed CSS animations in `<style>` tags**
+
    ```jsx
    <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } }`}</style>
    ```
 
 4. **Use Canvas API with requestAnimationFrame**
+
    ```jsx
-   const animate = () => { /* drawing code */ requestAnimationFrame(animate) }
+   const animate = () => {
+     /* drawing code */ requestAnimationFrame(animate)
+   }
    ```
 
 5. **Use SVG elements with inline styles**
+
    ```jsx
-   <svg><circle cx="50" cy="50" r="40" fill="#ff6b6b" /></svg>
+   <svg>
+     <circle cx="50" cy="50" r="40" fill="#ff6b6b" />
+   </svg>
    ```
 
 6. **Export a single named or default function**
+
    ```jsx
    export function MyAnimation() { ... }
    // or
@@ -485,6 +536,7 @@ When generating React animation code, follow these rules:
    ```
 
 7. **Use standard HTML elements with camelCase CSS properties**
+
    ```jsx
    <div style={{ minHeight: '100vh', flexDirection: 'column' }}>
    ```
@@ -535,6 +587,7 @@ When generating React animation code, follow these rules:
 ## Quick Reference: Code Patterns
 
 ### Canvas Animation
+
 ```jsx
 import React, { useRef, useEffect } from 'react'
 
@@ -564,10 +617,19 @@ export default CanvasAnimation
 ```
 
 ### CSS Animation
+
 ```jsx
 export function CSSAnimation() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#1a1a2e',
+      }}
+    >
       <style>{`
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
@@ -577,17 +639,29 @@ export function CSSAnimation() {
           animation: bounce 1s ease-in-out infinite;
         }
       `}</style>
-      <div className="bouncing" style={{ width: '100px', height: '100px', backgroundColor: '#ff6b6b', borderRadius: '50%' }} />
+      <div
+        className="bouncing"
+        style={{ width: '100px', height: '100px', backgroundColor: '#ff6b6b', borderRadius: '50%' }}
+      />
     </div>
   )
 }
 ```
 
 ### SVG Animation
+
 ```jsx
 export function SVGAnimation() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#1a1a2e',
+      }}
+    >
       <svg width="200" height="200" viewBox="0 0 200 200">
         <circle cx="100" cy="100" r="80" fill="#4ecdc4" />
         <circle cx="100" cy="100" r="60" fill="#ff6b6b" />
@@ -600,6 +674,7 @@ export function SVGAnimation() {
 ```
 
 ### Combined Animation
+
 ```jsx
 import React, { useState } from 'react'
 
@@ -608,21 +683,31 @@ export function CombinedAnimation() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setRotation(r => (r + 1) % 360)
+      setRotation((r) => (r + 1) % 360)
     }, 16)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#1a1a2e' }}>
-      <div style={{
-        width: '150px',
-        height: '150px',
-        backgroundColor: '#ff6b6b',
-        borderRadius: '50%',
-        transform: `rotate(${rotation}deg)`,
-        boxShadow: '0 0 30px rgba(255,107,107,0.5)'
-      }} />
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#1a1a2e',
+      }}
+    >
+      <div
+        style={{
+          width: '150px',
+          height: '150px',
+          backgroundColor: '#ff6b6b',
+          borderRadius: '50%',
+          transform: `rotate(${rotation}deg)`,
+          boxShadow: '0 0 30px rgba(255,107,107,0.5)',
+        }}
+      />
     </div>
   )
 }
@@ -637,6 +722,7 @@ All `npm run` commands must be executed from the project root directory (where p
 3. Export a named function or default export as the main component
 
 Example animation structure:
+
 ```
 animations/
 └── my-animation/
@@ -646,6 +732,7 @@ animations/
 ```
 
 Example animation code (`index.jsx`):
+
 ```jsx
 import React, { useRef, useEffect } from 'react'
 
@@ -655,14 +742,14 @@ export function MyAnimation() {
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
-    
+
     function animate() {
       ctx.fillStyle = '#1a1a2e'
       ctx.fillRect(0, , canvas.height)
       // Your animation code here
      0, canvas.width requestAnimationFrame(animate)
     }
-    
+
     animate()
   }, [])
 
@@ -687,13 +774,13 @@ cp /path/to/your/react-project/src/App.jsx animations/my-project/index.jsx
 
 Your React code must be **browser-compatible**:
 
-| Supported | Not Supported |
-|-----------|---------------|
-| React hooks (`useState`, `useEffect`, `useRef`) | Node.js APIs (`fs`, `path`, `require`) |
-| Inline styles (`style={{...}}`) | CSS frameworks (Tailwind - must convert to inline) |
-| CSS animations (`@keyframes`) | CSS imports (`import './styles.css'`) |
-| SVG elements | External assets (images must be embedded or URL) |
-| Canvas API | CSS Modules |
+| Supported                                       | Not Supported                                      |
+| ----------------------------------------------- | -------------------------------------------------- |
+| React hooks (`useState`, `useEffect`, `useRef`) | Node.js APIs (`fs`, `path`, `require`)             |
+| Inline styles (`style={{...}}`)                 | CSS frameworks (Tailwind - must convert to inline) |
+| CSS animations (`@keyframes`)                   | CSS imports (`import './styles.css'`)              |
+| SVG elements                                    | External assets (images must be embedded or URL)   |
+| Canvas API                                      | CSS Modules                                        |
 
 ### Step 3: Convert to Browser-Compatible Format
 
@@ -706,10 +793,12 @@ npx tsx scripts/tailwind-converter.ts <input-path> <output-directory>
 ```
 
 Arguments:
+
 - `<input-path>` - React file (`.tsx`, `.ts`, `.jsx`, `.js`) or project directory
 - `<output-directory>` - Output directory for browser-compatible version
 
 Examples:
+
 ```bash
 # Convert a single TSX file
 npx tsx scripts/tailwind-converter.ts ./src/App.tsx ./animations/my-project
@@ -719,6 +808,7 @@ npx tsx scripts/tailwind-converter.ts ./my-react-project ./animations/converted
 ```
 
 What it does:
+
 - Converts Tailwind CSS classes (`flex`, `min-h-screen`, `bg-blue-500`) to inline styles
 - Handles gradient colors (`from-slate-50`, `to-indigo-600`)
 - Extracts CSS animations to `<style>` tags
@@ -726,22 +816,31 @@ What it does:
 - Converts hyphenated CSS properties to camelCase (`min-height` → `minHeight`)
 
 **Before (Tailwind):**
+
 ```jsx
 <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-indigo-600" />
 ```
 
 **After (Browser-compatible):**
+
 ```jsx
-<div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #4f46e5 100%)' }} />
+<div
+  style={{
+    display: 'flex',
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #f8fafc 0%, #4f46e5 100%)',
+  }}
+/>
 ```
 
 **CSS Animations Example:**
+
 ```jsx
 // BEFORE (CSS import - won't work)
 import './styles.css'
 
 // AFTER (Embedded in style tag)
-<style>{`
+;<style>{`
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-100px); }
@@ -760,22 +859,26 @@ npm run convert:pipeline -- animations/my-project output/my-video.mp4 --fps 30 -
 If you have a React project with Tailwind CSS at `/home/user/my-react-app/src/App.jsx`:
 
 **Step 1: Copy your React files to the animations directory**
+
 ```bash
 mkdir -p animations/my-react-app
 cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx
 ```
 
 **Step 2: Convert Tailwind CSS to inline styles (automatic)**
+
 ```bash
 npx tsx scripts/tailwind-converter.ts animations/my-react-app/index.jsx animations/my-react-app
 ```
 
 **Step 3: Convert to video**
+
 ```bash
 npm run convert:pipeline -- animations/my-react-app output/my-react-video.mp4 --fps 30 --duration 5
 ```
 
 **Full one-liner:**
+
 ```bash
 mkdir -p animations/my-react-app && \
   cp /home/user/my-react-app/src/App.jsx animations/my-react-app/index.jsx && \
@@ -821,40 +924,48 @@ npm run convert:pipeline -- animations/example-animation output/video.mp4 \
 
 ### Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--fps` | Frame rate | 30 |
-| `--duration` | Video duration in seconds | 5 |
-| `--width` | Video width in pixels | 800 |
-| `--height` | Video height in pixels | 600 |
-| `--quality` | Video quality (low/medium/high) | medium |
+| Option       | Description                     | Default |
+| ------------ | ------------------------------- | ------- |
+| `--fps`      | Frame rate                      | 30      |
+| `--duration` | Video duration in seconds       | 5       |
+| `--width`    | Video width in pixels           | 800     |
+| `--height`   | Video height in pixels          | 600     |
+| `--quality`  | Video quality (low/medium/high) | medium  |
 
 ## Testing Stages Individually
 
 Test each stage of the pipeline independently for debugging:
 
 ### Test Stage 1: HTML Generator
+
 ```bash
 npm run convert:test1
 ```
+
 Generates HTML from React code and saves to `test-output/stage1/animation.html`
 
 ### Test Stage 2: Browser Renderer
+
 ```bash
 npm run convert:test2
 ```
+
 Captures frames from the generated HTML and saves to `test-output/stage2/frames/`
 
 ### Test Stage 3: Video Encoder
+
 ```bash
 npm run convert:test3
 ```
+
 Encodes frames to MP4 and saves to `test-output/stage3/output.mp4`
 
 ### Test All Stages
+
 ```bash
 npm run convert:test
 ```
+
 Runs all three stages sequentially.
 
 ## Validating Animations
@@ -890,21 +1001,25 @@ This starts an Express server at `http://localhost:3000` with API endpoints for 
 Run all commands from the project root directory.
 
 Run all tests:
+
 ```bash
 npm test
 ```
 
 Run tests with coverage:
+
 ```bash
 npm run test:coverage
 ```
 
 Run tests in watch mode:
+
 ```bash
 npm run test:watch
 ```
 
 Run a single test file:
+
 ```bash
 npm test -- tests/convert.test.js
 ```
@@ -914,21 +1029,25 @@ npm test -- tests/convert.test.js
 Run all commands from the project root directory.
 
 Lint code:
+
 ```bash
 npm run lint
 ```
 
 Fix linting issues:
+
 ```bash
 npm run lint:fix
 ```
 
 Format code:
+
 ```bash
 npm run format
 ```
 
 Type checking:
+
 ```bash
 npm run typecheck
 ```
@@ -946,10 +1065,10 @@ When running `npm run dev`:
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Development server port | 3000 |
-| `NODE_ENV` | Environment mode | development |
+| Variable   | Description             | Default     |
+| ---------- | ----------------------- | ----------- |
+| `PORT`     | Development server port | 3000        |
+| `NODE_ENV` | Environment mode        | development |
 
 ### TypeScript Configuration
 
@@ -966,6 +1085,7 @@ All commands should be run from the project root directory (where package.json i
 ### Animation not found
 
 Make sure your animation is in the `animations/` directory:
+
 ```bash
 ls animations/
 # Should show your animation folder
@@ -974,6 +1094,7 @@ ls animations/
 ### FFmpeg not found
 
 Ensure FFmpeg is installed and available in your system PATH:
+
 ```bash
 which ffmpeg
 ffmpeg -version
@@ -982,6 +1103,7 @@ ffmpeg -version
 ### Playwright not available
 
 Install Playwright browsers:
+
 ```bash
 npx playwright install chromium
 ```
@@ -1013,6 +1135,7 @@ Reduce video resolution or duration in the conversion options.
 ## Quick Reference
 
 ### Convert React with Tailwind to MP4
+
 ```bash
 # 1. Copy React file
 mkdir -p animations/my-animation
@@ -1029,25 +1152,25 @@ npm run convert:pipeline -- animations/my-animation output/video.mp4 --fps 30 --
 
 ### Common Commands
 
-| Task | Command |
-|------|---------|
-| Convert animation to MP4 | `npm run convert:pipeline -- animations/<name> output/video.mp4` |
-| Convert Tailwind React file | `npm run convert:tailwind -- <input> <output>` |
-| Test HTML generation | `npm run convert:test1` |
-| Test frame capture | `npm run convert:test2` |
-| Test video encoding | `npm run convert:test3` |
-| Validate animation | `npm run validate -- animations/<name>` |
-| Lint code | `npm run lint` |
+| Task                        | Command                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| Convert animation to MP4    | `npm run convert:pipeline -- animations/<name> output/video.mp4` |
+| Convert Tailwind React file | `npm run convert:tailwind -- <input> <output>`                   |
+| Test HTML generation        | `npm run convert:test1`                                          |
+| Test frame capture          | `npm run convert:test2`                                          |
+| Test video encoding         | `npm run convert:test3`                                          |
+| Validate animation          | `npm run validate -- animations/<name>`                          |
+| Lint code                   | `npm run lint`                                                   |
 
 ### Options for Conversion
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--fps` | Frame rate | 30 |
-| `--duration` | Duration in seconds | 5 |
-| `--width` | Width in pixels | 800 |
-| `--height` | Height in pixels | 600 |
-| `--quality` | Quality (low/medium/high) | medium |
+| Option       | Description               | Default |
+| ------------ | ------------------------- | ------- |
+| `--fps`      | Frame rate                | 30      |
+| `--duration` | Duration in seconds       | 5       |
+| `--width`    | Width in pixels           | 800     |
+| `--height`   | Height in pixels          | 600     |
+| `--quality`  | Quality (low/medium/high) | medium  |
 
 ## License
 

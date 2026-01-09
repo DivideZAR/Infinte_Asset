@@ -135,13 +135,19 @@ async function captureFrames(
     // Check if a valid canvas element exists for optimized capture
     const hasCanvas = await page.evaluate(() => {
       const canvases = Array.from(document.querySelectorAll('canvas'))
-      const validCanvas = canvases
-        .filter((c) => c.width > 0 && c.height > 0)
-        .sort((a, b) => b.width * b.height - a.width * a.height)[0]
-      return !!validCanvas
+      // Check for 2D canvas elements
+      const validCanvas = canvases.filter((c) => c.width > 0 && c.height > 0)
+      // Check for Three.js WebGL renderer (uses renderer.domElement)
+      const hasWebGLRenderer = Array.from(document.querySelectorAll('canvas')).some(
+        (c) => c.width > 0 && c.height > 0 && c.getContext('webgl'),
+      )
+      // Use whichever is available
+      return !!validCanvas || hasWebGLRenderer
     })
     console.log(
-      `Optimization: ${hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'}`,
+      `Optimization: ${
+        hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'
+      }`,
     )
 
     // Check if frame-based rendering is available
