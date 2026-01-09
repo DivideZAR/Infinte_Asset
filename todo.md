@@ -63,6 +63,9 @@ Each task is represented as a JSON object:
 - ✅ Fix Three.js template replacement bug: Prevent replacement of {THREE_SOURCE} inside library code
 - ✅ Add "Particle Burst" 2D animation for comprehensive testing
 - ✅ Add AI prompt template to project documentation
+  - README.md updated with clear 🎯 emoji markers
+  - Easy to identify start/end for AI prompt copying
+  - Includes all constraints and guidelines
 - ✅ Check with git agent to maintain best practices
 - ✅ Update project todo.md
 - ✅ Update AGENTS.md to be more concise and accurate (167 lines, reduced from 220)
@@ -74,13 +77,39 @@ Each task is represented as a JSON object:
   - Updated browser-renderer.ts to call renderFrame() explicitly
   - Test: test-3d now renders at 60fps smoothly (0.11 MB, 180 frames)
   - See: output/test-3d-smooth.mp4
+  - Applied fix to html-generator to restrict frame-based rendering to Three.js only
+  - 2D animations (pulse-circles, example-animation) use continuous RAF
+  - Successfully tested multiple animations at 60fps
+- ✅ Investigate white screen issue in output files
+  - Root cause: HTML template replacement breaking Scene1 animation
+  - Scene1 code had '{REACT_SOURCE}' strings (intentional or accidental)
+  - html-generator.ts replaced ALL occurrences, including those in user code
+  - This caused minified React library code to have syntax errors
+  - Fix: Use unique placeholders '@@REACT_SOURCE@@' and '@@REACT_DOM_SOURCE@@'
+  - Results: Scene1 now renders correctly (180 frames, 60fps, no errors)
+  - White screen issue RESOLVED
+- ✅ Fix white screen issue - COMPLETED
+  - Fixed template placeholders in html-generator.ts
+  - Added Three.js WebGL renderer capture support
+  - Added RGB24 pixel format for FFmpeg encoding
+  - Canvas detection now supports both 2D and WebGL renderers
+- ✅ Add Three.js WebGL renderer capture support
+  - Browser renderer now detects WebGL renderers via getContext('webgl')
+  - Three.js scenes (NewScene1_fixed) now properly captured
+  - Both 2D canvas and WebGL canvas detection implemented
+
+### In Progress
+
+- [ ] Fix NewScene1_fixed animation rendering
+  - Three.js capture now working (WebGL renderer support added)
+  - Animation has syntax issues preventing proper frame rendering
+  - Needs debugging or recreation with simpler implementation
 
 ### Pending Tasks
 
 #### High Priority
 
-- [ ] Investigate white screen issue in output files
-- [ ] Fix white screen issue
+(No high priority tasks currently pending)
 
 #### Medium Priority
 
