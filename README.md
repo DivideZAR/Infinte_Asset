@@ -23,11 +23,12 @@ This project includes configured OpenCode AI subagents for specialized tasks:
 - **Capabilities**: Branch management, commits, merges, repository analysis
 - **Usage**: Automatically invoked for git-related tasks, or use `@git-agent [command]`
 
-### Tester Agent (`@tester-agent`)
+### Tester Agent (`@tester-agent` / `tester`)
 
 - **Purpose**: Testing pipeline and code quality validation
 - **Capabilities**: TypeScript checking, linting, test execution, build validation
-- **Usage**: Automatically invoked for testing tasks, or use `@tester-agent [command]`
+- **Usage**: Automatically invoked for testing tasks, or use `@tester-agent [command]` or global `tester [command]`
+- **Global Commands**: `tester all`, `tester status`, `tester typecheck`, `tester lint`, `tester test`, `tester build`
 
 ### Automatic Invocation
 
