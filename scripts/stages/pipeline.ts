@@ -161,14 +161,6 @@ async function convertAnimation(
       error as Error,
     )
   } finally {
-    try {
-      if (await fs.pathExists(tempDir)) {
-        console.log(`\nCleaning up temp files...`)
-        await fs.remove(tempDir)
-      }
-    } catch (cleanupError) {
-      console.error('Failed to clean up temp directory:', cleanupError)
-    }
     // await fs.remove(tempDir) // Keep temp directory for inspection
   }
 }
