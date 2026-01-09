@@ -5,6 +5,7 @@ coverage/
 temp/
 output/
 test-output/
+animations/
 .env
 .env.local
 *.log
