@@ -72,8 +72,7 @@ Each task is represented as a JSON object:
 #### High Priority
 
 - [ ] Investigate white screen issue in output files
-- [ ] Fix the white screen issue
-- [ ] Update AGENTS.md to be more concise and accurate (~150 lines)
+- [ ] Fix white screen issue
 
 #### Medium Priority
 
