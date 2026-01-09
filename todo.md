@@ -97,13 +97,18 @@ Each task is represented as a JSON object:
   - Browser renderer now detects WebGL renderers via getContext('webgl')
   - Three.js scenes (NewScene1_fixed) now properly captured
   - Both 2D canvas and WebGL canvas detection implemented
-
-### In Progress
-
-- [ ] Fix NewScene1_fixed animation rendering
-  - Three.js capture now working (WebGL renderer support added)
-  - Animation has syntax issues preventing proper frame rendering
-  - Needs debugging or recreation with simpler implementation
+- ✅ Fix NewScene1_fixed animation rendering - COMPLETED
+  - Fixed TypeScript compilation errors (' expected error)
+  - Replaced corrupted JSX with working simplified Three.js animation
+  - Animation now compiles cleanly and converts to MP4 successfully
+  - Created basic rotating cube with proper scene setup
+  - Includes frame-based rendering infrastructure for future enhancement
+- ✅ Make Tester Subagent globally accessible
+  - Created scripts/tester-cli.js global CLI wrapper
+  - Added 'tester' command to package.json bin section
+  - Comprehensive testing commands: all, status, typecheck, lint, test, build
+  - Global access via 'tester' command (like git-agent)
+  - Status checking and health monitoring functionality
 
 ### Pending Tasks
 
@@ -127,7 +132,7 @@ Each task is represented as a JSON object:
 - ✅ TypeScript: 0 errors (all script files fixed)
 - ✅ Build: Working (dist/ created successfully)
 - ✅ Jest: Working (all tests passing with ESM support)
-- ✅ CLI: `git-agent` and `tester` (via scripts/tester.js) are operational
+- ✅ CLI: `git-agent` and `tester` (global commands) are operational
 
 ### Known Issues
 
@@ -136,20 +141,33 @@ Each task is represented as a JSON object:
    - Now accessible globally via `git-agent` command
 
 2. Tester_Agent Created
-   - Comprehensive testing subagent at scripts/Tester_Agent.js
-   - Can run typecheck, lint, tests, build
-   - Integrates with todo tracking
+   - Comprehensive testing subagent with global CLI wrapper
+   - scripts/Tester_Agent.js (framework) + scripts/tester-cli.js (CLI)
+   - Globally accessible via `tester` command
+   - Can run typecheck, lint, tests, build with status monitoring
+   - Integrates with project health checking
 
 ## How to Update Tasks
 
-### Using Tester_Agent
+### Using Tester_Agent (Global CLI)
 
 ```bash
-# Show current todos
-node scripts/tester.js show-todos
+# Quick project health check
+tester status
 
-# Mark task as in progress
-# (Need to implement)
+# Comprehensive testing
+tester all
+
+# Individual test commands
+tester typecheck    # TypeScript compilation
+tester lint        # ESLint code quality
+tester test        # Jest unit tests
+tester build       # Build verification
+
+# Development tools
+tester fix         # Auto-fix linting issues
+tester format      # Code formatting
+tester coverage    # Test coverage analysis
 ```
 
 ### Manual Updates
