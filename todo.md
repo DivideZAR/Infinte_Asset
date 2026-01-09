@@ -65,6 +65,7 @@ Each task is represented as a JSON object:
 - ✅ Add AI prompt template to project documentation
 - ✅ Check with git agent to maintain best practices
 - ✅ Update project todo.md
+- ✅ Update AGENTS.md to be more concise and accurate (167 lines, reduced from 220)
 
 ### Pending Tasks
 
@@ -97,7 +98,7 @@ Each task is represented as a JSON object:
    - Comprehensive git operations subagent at scripts/Git_Agent.js
    - Now accessible globally via `git-agent` command
 
-3. Tester_Agent Created
+2. Tester_Agent Created
    - Comprehensive testing subagent at scripts/Tester_Agent.js
    - Can run typecheck, lint, tests, build
    - Integrates with todo tracking
