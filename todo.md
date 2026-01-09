@@ -66,6 +66,14 @@ Each task is represented as a JSON object:
 - ✅ Check with git agent to maintain best practices
 - ✅ Update project todo.md
 - ✅ Update AGENTS.md to be more concise and accurate (167 lines, reduced from 220)
+- ✅ Improve smoothness of MP4 files generated from 3D React animations
+  - Implemented frame-deterministic rendering (eliminates flickering)
+  - Fixed Playwright #37635 RAF/clock sync issue
+  - Added explicit renderFrame() function for frame-based control
+  - Removed continuous requestAnimationFrame loops
+  - Updated browser-renderer.ts to call renderFrame() explicitly
+  - Test: test-3d now renders at 60fps smoothly (0.11 MB, 180 frames)
+  - See: output/test-3d-smooth.mp4
 
 ### Pending Tasks
 

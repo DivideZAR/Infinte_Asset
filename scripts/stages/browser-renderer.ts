@@ -6,6 +6,13 @@ import { chromium, Browser, BrowserContext } from 'playwright'
 declare global {
   interface Window {
     animationReady: boolean
+    __frameConfig: {
+      fps: number
+      duration: number
+      isFrameBased: boolean
+    }
+    __animationScene: any
+    renderFrame: (frameNumber: number) => void
   }
 }
 
@@ -89,9 +96,6 @@ async function captureFrames(
 
     console.log(`Loading: file://${htmlPath}`)
 
-    // Use clock to control time for deterministic rendering
-    await page.clock.install()
-
     await page.goto(`file://${htmlPath}`, {
       waitUntil: 'networkidle',
       timeout: 30000,
@@ -108,36 +112,66 @@ async function captureFrames(
       console.warn('Animation ready signal not received, continuing anyway...')
     }
 
-    // Capture the first frame immediately (t=0)
-    
     const totalFrames = Math.ceil(fullConfig.fps * fullConfig.duration)
     let frameCount = 0
-    const frameInterval = 1000 / fullConfig.fps
 
     console.log(`Capturing ${totalFrames} frames...`)
+
+    // Check if animation has frame-based rendering infrastructure
+    const hasFrameBasedInfrastructure = await page.evaluate(() => {
+      return typeof window.__frameConfig !== 'undefined'
+    })
+
+    // Set up frame configuration if animation supports it
+    if (hasFrameBasedInfrastructure) {
+      await page.evaluate(
+        (config) => {
+          window.__frameConfig = config
+        },
+        { fps: fullConfig.fps, duration: fullConfig.duration, isFrameBased: true },
+      )
+    }
 
     // Check if a valid canvas element exists for optimized capture
     const hasCanvas = await page.evaluate(() => {
       const canvases = Array.from(document.querySelectorAll('canvas'))
-      // Find largest visible canvas
       const validCanvas = canvases
-        .filter(c => c.width > 0 && c.height > 0)
-        .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0]
+        .filter((c) => c.width > 0 && c.height > 0)
+        .sort((a, b) => b.width * b.height - a.width * a.height)[0]
       return !!validCanvas
     })
-    console.log(`Optimization: ${hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'}`)
+    console.log(
+      `Optimization: ${hasCanvas ? 'Canvas found (using toDataURL)' : 'No canvas (using screenshot fallback)'}`,
+    )
+
+    // Check if frame-based rendering is available
+    const hasFrameBasedRendering = await page.evaluate(() => {
+      return typeof window.renderFrame === 'function' && typeof window.__animationScene !== null
+    })
+    console.log(
+      `Rendering mode: ${hasFrameBasedRendering ? 'Frame-based (smooth)' : 'Continuous (may flicker)'}`,
+    )
 
     for (let i = 0; i < totalFrames; i++) {
       const framePath = path.join(frameDir, `frame_${String(i).padStart(4, '0')}.png`)
 
       try {
+        // Render frame explicitly for smooth animation
+        if (hasFrameBasedRendering) {
+          await page.evaluate((frameNumber) => {
+            if (typeof window.renderFrame === 'function') {
+              window.renderFrame(frameNumber)
+            }
+          }, i)
+        }
+
         if (hasCanvas) {
-          // Optimized: Get base64 data directly from the largest canvas
+          // Optimized: Get base64 data directly from largest canvas
           const dataUrl = await page.evaluate(() => {
             const canvases = Array.from(document.querySelectorAll('canvas'))
             const canvas = canvases
-              .filter(c => c.width > 0 && c.height > 0)
-              .sort((a, b) => (b.width * b.height) - (a.width * a.height))[0]
+              .filter((c) => c.width > 0 && c.height > 0)
+              .sort((a, b) => b.width * b.height - a.width * a.height)[0]
             return canvas ? canvas.toDataURL('image/png') : null
           })
 
@@ -162,9 +196,6 @@ async function captureFrames(
         if ((i + 1) % 12 === 0 || i === totalFrames - 1) {
           console.log(`Progress: ${i + 1}/${totalFrames} frames`)
         }
-
-        // Advance the clock by one frame interval
-        await page.clock.fastForward(frameInterval)
       } catch (error) {
         console.error(`Error capturing frame ${i + 1}:`, (error as Error).message)
         break
