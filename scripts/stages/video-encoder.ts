@@ -90,6 +90,7 @@ async function encodeFrames(
     const command = ffmpeg()
       .input(framePattern)
       .inputOptions(['-framerate', fullConfig.fps.toString()])
+      .inputOptions(['-pix_fmt', 'rgb24'])
       .output(outputPath)
 
     if (width && height) {

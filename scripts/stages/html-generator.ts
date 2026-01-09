@@ -40,52 +40,16 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
 <body>
   <div id="root"></div>
   <script>
-    {REACT_SOURCE}
+    @@REACT_SOURCE@@
   </script>
   <script>
-    {REACT_DOM_SOURCE}
+    @@REACT_DOM_SOURCE@@
   </script>
   <script>
     {THREE_SOURCE}
   </script>
   <script>
     const { useState, useEffect, useRef, useCallback, useMemo, useContext, useReducer } = React;
-    
-    // Frame rendering configuration (set by browser renderer)
-    window.__frameConfig = {
-      fps: 30,
-      duration: 5,
-      isFrameBased: false
-    };
-    
-    // Global reference to animation scene for frame-based rendering
-    window.__animationScene = null;
-    
-    // Frame-based rendering function for smooth animation capture
-    window.renderFrame = function(frameNumber) {
-      if (!window.__animationScene) return;
-      
-      const scene = window.__animationScene;
-      const fps = window.__frameConfig.fps || 30;
-      
-      // Calculate rotation based on frame number for deterministic rendering
-      const rotationSpeedX = 0.02;
-      const rotationSpeedY = 0.03;
-      
-      // Base rotation on frame number instead of time
-      const time = frameNumber / fps; // Time in seconds
-      const targetRotationX = time * (rotationSpeedX * 60); // Scale to match original speed
-      const targetRotationY = time * (rotationSpeedY * 60);
-      
-      if (scene.torusKnot) {
-        scene.torusKnot.rotation.x = targetRotationX;
-        scene.torusKnot.rotation.y = targetRotationY;
-      }
-      
-      if (scene.renderer && scene.scene && scene.camera) {
-        scene.renderer.render(scene.scene, scene.camera);
-      }
-    };
   </script>
   <script type="module">
     {ANIMATION_CODE}
