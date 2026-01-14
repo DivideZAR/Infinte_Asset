@@ -240,14 +240,119 @@ async function generateHtml(
   for (const file of animationFiles) {
     const content = await fs.readFile(file, 'utf-8')
     const relativePath = path.relative(animationDir, file)
-    combinedCode += `// File: ${relativePath}\n${content}\n\n`
+    // Skip index.jsx files that just re-export from other files
+    if (path.basename(file).toLowerCase().startsWith('index.')) {
+      // If this is a re-export file, extract the actual component and include it
+      const exportMatch = content.match(/export\s*\{\s*default\s*\}\s*from\s*['"]([^'"]+)['"]/)
+      if (exportMatch) {
+        const importPath = exportMatch[1]
+        const resolvedPath = path.resolve(animationDir, importPath)
+        if (await fs.pathExists(resolvedPath)) {
+          const actualContent = await fs.readFile(resolvedPath, 'utf-8')
+          combinedCode += `// File: ${relativePath} -> ${importPath}\n${actualContent}\n\n`
+        }
+      }
+    } else {
+      combinedCode += `// File: ${relativePath}\n${content}\n\n`
+    }
   }
 
   const { transformedCode, mainComponentName } = transformCode(combinedCode)
 
+  // Inject viewport overrides and frame infrastructure BEFORE the render call
+  const viewportAndFrameScript = `
+  // Auto-generated viewport and frame infrastructure
+  (function() {
+    // Override viewport dimensions to match configured size
+    const configWidth = ${fullConfig.width};
+    const configHeight = ${fullConfig.height};
+
+    // Override window dimensions
+    Object.defineProperty(window, 'innerWidth', { get: () => configWidth, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { get: () => configHeight, configurable: true });
+    Object.defineProperty(window, 'outerWidth', { get: () => configWidth, configurable: true });
+    Object.defineProperty(window, 'outerHeight', { get: () => configHeight, configurable: true });
+
+     // Override document dimensions
+     try {
+       if (document.documentElement) {
+         document.documentElement.style.width = configWidth + 'px';
+         document.documentElement.style.height = configHeight + 'px';
+       }
+       if (document.body) {
+         document.body.style.width = configWidth + 'px';
+         document.body.style.height = configHeight + 'px';
+       }
+     } catch (e) {
+       // Ignore errors from read-only properties
+     }
+
+    // Frame-based rendering infrastructure
+    window.__frameConfig = {
+      fps: ${fullConfig.fps},
+      duration: ${fullConfig.duration},
+      isFrameBased: true
+    };
+    window.__currentFrame = 0;
+    window.__animationStartTime = null;
+    window.__timelineEvents = [];
+    window.__triggeredEvents = new Set();
+
+    // Track animation state
+    const originalStartAnimation = typeof window.startAnimation === 'function' ? window.startAnimation : null;
+    window.startAnimation = function() {
+      window.__animationStartTime = Date.now();
+      window.isAnimating = true;
+      if (originalStartAnimation) {
+        originalStartAnimation();
+      }
+    };
+
+    // Override isAnimating property
+    Object.defineProperty(window, 'isAnimating', {
+      get: function() { return this._isAnimating === true; },
+      set: function(v) { this._isAnimating = v; },
+      configurable: true
+    });
+    window._isAnimating = false;
+
+    // Frame rendering function for browser-renderer
+    window.renderFrame = function(frameNumber) {
+      window.__currentFrame = frameNumber;
+
+      // Calculate elapsed time based on frame number
+      const fps = window.__frameConfig.fps || 30;
+      const elapsed = (frameNumber / fps) * 1000;
+
+      // Trigger timeline events that should have fired by now
+      if (window.__timelineEvents && window.__timelineEvents.length > 0) {
+        window.__timelineEvents.forEach((event, index) => {
+          if (elapsed >= event.time && !window.__triggeredEvents.has(index)) {
+            window.__triggeredEvents.add(index);
+            if (typeof event.action === 'function') {
+              event.action();
+            }
+          }
+        });
+      }
+
+      // Force canvas redraw
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        canvas.width = canvas.width;  // Clear and force redraw
+      }
+
+      // Trigger requestAnimationFrame for React to update
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(() => {});
+      }
+    };
+  })();
+  `
+
   const finalCode =
     transformedCode +
-    `\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that animation is ready\nwindow.animationReady = true;`
+    `\n\n${viewportAndFrameScript}\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that animation is ready\nwindow.animationReady = true;`
 
   let htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
   htmlContent = htmlContent.replace('@@REACT_SOURCE@@', reactSource)
@@ -274,7 +379,7 @@ async function generateHtml(
         htmlContent.substring(index + '{THREE_SOURCE}'.length)
     }
 
-    // Inject frame-based rendering infrastructure before closing body tag
+    // Inject Three.js frame-based rendering infrastructure before closing body tag
     const frameBasedScript = `
     <script>
       window.__frameConfig = {
