@@ -4,7 +4,7 @@
     "git-agent": {
       "description": "Git operations and repository management",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "opencode/gpt-5",
       "temperature": 0.1,
       "tools": {
         "bash": true,
@@ -25,7 +25,7 @@
     "tester-agent": {
       "description": "Testing pipeline and code quality validation",
       "mode": "subagent",
-      "model": "anthropic/claude-haiku-4-20250514",
+      "model": "opencode/gpt-5",
       "temperature": 0.1,
       "tools": {
         "bash": true,

@@ -1,7 +1,7 @@
 ---
 description: Comprehensive git operations and repository management
 mode: subagent
-model: anthropic/claude-sonnet-4-20250514
+model: orieg/gemma3-tools:4b
 temperature: 0.1
 tools:
   bash: true

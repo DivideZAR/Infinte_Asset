@@ -1,7 +1,7 @@
 ---
 description: Comprehensive testing pipeline for code quality and validation
 mode: subagent
-model: anthropic/claude-haiku-4-20250514
+model: opencode/gpt-5
 temperature: 0.1
 tools:
   bash: true

@@ -389,7 +389,7 @@ You are an expert React Animation developer. Your task is to generate a standalo
 
 **Code Structure:**
 
-1. Return a single Functional Component.
+1. Return a single Functional Component file in index.jsx.
 2. Ensure the container takes up the full view (`width: 100%`, `height: 100%`) or matches specific requested dimensions (e.g. 800x600).
 3. If using Canvas, use a `ref` to access the element and `useEffect` to start/cleanup animation loop.
 
