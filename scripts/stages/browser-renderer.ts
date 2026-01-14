@@ -13,6 +13,8 @@ declare global {
       duration: number
       isFrameBased: boolean
     }
+    __frameTimeBase: number
+    __frameProgress: number
     __animationScene: any
     renderFrame: (frameNumber: number) => void
   }
@@ -394,16 +396,53 @@ async function captureFrames(
           // Additional wait for animation updates
           await page.waitForTimeout(50)
         } else {
-          // For frame-based rendering, advance time
+          // For frame-based rendering, advance time and trigger updates
           const msPerFrame = Math.round(1000 / fullConfig.fps)
-          await page.evaluate((ms: number) => {
-            const now = Date.now()
-            Date.now = () => now + ms
 
+          // Advance time by one frame and handle timeouts
+          await page.evaluate((ms: number) => {
+            // Initialize frame-based time tracking if not already done
+            if (typeof window.__frameTimeBase === 'undefined') {
+              window.__frameTimeBase = Date.now()
+              window.__frameProgress = 0
+            }
+
+            // Advance frame progress
+            window.__frameProgress += ms
+
+            // Override Date.now to return the advanced time
+            const advancedTime = window.__frameTimeBase + window.__frameProgress
+            Date.now = () => advancedTime
+
+            // Override setTimeout to execute callbacks when their delay is reached
+            const originalSetTimeout = window.setTimeout
+            const timeoutIds: number[] = []
+            window.setTimeout = ((cb: () => void, delay: number) => {
+              // Calculate absolute time when this callback should fire
+              const targetTime = advancedTime + delay
+
+              // Check if we should fire immediately
+              if (targetTime <= advancedTime) {
+                try {
+                  cb()
+                } catch {
+                  // Ignore errors
+                }
+                return 0
+              }
+
+              // Otherwise, schedule with adjusted delay
+              const adjustedDelay = targetTime - advancedTime
+              const id = originalSetTimeout(cb, adjustedDelay)
+              timeoutIds.push(id)
+              return id
+            }) as typeof window.setTimeout
+
+            // Override requestAnimationFrame
             if (typeof window.requestAnimationFrame === 'function') {
               window.requestAnimationFrame = ((cb: (time: number) => void) => {
                 try {
-                  cb(Date.now())
+                  cb(advancedTime)
                 } catch {
                   // Ignore errors
                 }
@@ -412,12 +451,15 @@ async function captureFrames(
             }
           }, msPerFrame)
 
-          // Call renderFrame if available
+          // Call renderFrame to trigger timeline events and updates
           await page.evaluate((frameNumber) => {
             if (typeof window.renderFrame === 'function') {
               window.renderFrame(frameNumber)
             }
           }, i)
+
+          // Small wait for React to process updates
+          await page.waitForTimeout(10)
         }
 
         // Capture the frame
