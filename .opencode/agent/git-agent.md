@@ -1,7 +1,7 @@
 ---
 description: 'Git operations: branch management, commits, merges, and repository analysis. Automatically invoked for git-related tasks.'
 mode: subagent
-model: ollama/gemma3-tools:4b-16K
+model: ollama/granite4:7b-a1b-h-16k
 temperature: 0.1
 maxSteps: 50
 tools:

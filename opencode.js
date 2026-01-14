@@ -21,10 +21,18 @@ export const ollamaConfig = {
   maxSteps: 50,
 }
 
-// Ollama 16K Context Configuration (Extended Context Window)
+// Ollama 16K Context Configuration (Extended Context Window - Gemma3)
 export const ollama16kConfig = {
   provider: 'ollama',
   model: 'orieg/gemma3-tools:4b-16K',
+  temperature: 0.1,
+  maxSteps: 50,
+}
+
+// Granite4 16K Context Configuration (IBM's Granite with 1M context window)
+export const granite16kConfig = {
+  provider: 'ollama',
+  model: 'granite4:7b-a1b-h-16k',
   temperature: 0.1,
   maxSteps: 50,
 }
@@ -45,7 +53,7 @@ export const agentConfigs = {
   'git-agent': {
     description: 'Git operations: branch management, commits, merges, and repository analysis',
     mode: 'subagent',
-    ...ollama16kConfig,
+    ...granite16kConfig,
     tools: ['bash', 'read', 'grep'],
     permissions: {
       bash: {
@@ -69,7 +77,7 @@ export const agentConfigs = {
     description:
       'Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation',
     mode: 'subagent',
-    ...ollama16kConfig,
+    ...granite16kConfig,
     tools: ['bash', 'read', 'grep', 'glob'],
     permissions: {
       bash: {
@@ -110,5 +118,6 @@ export const availableProviders = {
   openai: openaiConfig,
   ollama: ollamaConfig,
   ollama16k: ollama16kConfig,
+  granite16k: granite16kConfig,
   anthropic: anthropicConfig,
 }
