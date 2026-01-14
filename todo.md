@@ -148,13 +148,100 @@ The project core infrastructure is complete with comprehensive subagents for aut
 - ✅ Build: Working
 - ✅ Video Conversion: Working (black screen issue fixed)
 - ✅ Jest: All tests passing
-- ✅ Git-Agent: Updated with Ollama integration (gemma3-tools:4b)
-- ✅ Tester-Agent: Updated with Ollama integration (gemma3-tools:4b)
+- ✅ Git-Agent: Fully configured with OpenAI GPT-4o
+- ✅ Tester-Agent: Fully configured with OpenAI GPT-4o
 - ✅ Git History: Clean and organized
+- ✅ OpenCode Integration: All subagents properly configured
+- ✅ Ollama Fallback: Direct CLI git operations available
 
 **All Tasks Complete**:
 
 1. ✅ Fix Jest configuration - Completed (all tests passing)
 2. ✅ Clean up git history - Completed (branch created, changes committed)
 3. ✅ Recreate Tester_Agent - Completed (model updated, functionality verified)
-4. ✅ Ollama Git Agent Integration - NEW: Added direct Ollama CLI git operations
+4. ✅ Ollama Git Agent Integration - Added direct Ollama CLI git operations
+5. ✅ OpenCode Subagent Enhancement - **NEW**: Complete reconfiguration with best practices
+
+---
+
+## OpenCode Subagent Enhancement - COMPLETED ✅
+
+### Phase 1: Provider/Model Configuration ✅
+
+- ✅ Configured OpenAI GPT-4o model for OpenCode compatibility
+- ✅ Updated both JSON and Markdown configurations
+- ✅ Set temperature: 0.1 for deterministic responses
+- ✅ Documented Ollama CLI fallback procedure
+
+### Phase 2: Advanced Configuration ✅
+
+- ✅ Added maxSteps: 50 for cost control
+- ✅ Added task permissions for subagent collaboration
+- ✅ Enhanced descriptions with automatic invocation triggers
+- ✅ Configured glob pattern for tool access
+
+### Phase 3: Permission Hardening ✅
+
+- ✅ Implemented glob-pattern bash permissions for Git-Agent
+- ✅ Implemented glob-pattern bash permissions for Tester-Agent
+- ✅ Added edit/write prompts for safety
+- ✅ Verified permission inheritance from primary agents
+
+### Phase 4: Tool Access Optimization ✅
+
+- ✅ Made Git-Agent read-only by default (edit: false, write: false)
+- ✅ Added glob tool to Tester-Agent
+- ✅ Enabled grep for Git-Agent (file tracking)
+- ✅ Removed webfetch from Tester-Agent (unused)
+
+### Phase 5: Prompt Enhancement ✅
+
+- ✅ Rewrote Git-Agent prompt with output format specifications
+- ✅ Rewrote Tester-Agent prompt with quality thresholds
+- ✅ Added error handling patterns to both prompts
+- ✅ Included safe operation guidelines with examples
+
+### Phase 6: Documentation & Testing ✅
+
+- ✅ Synced JSON and Markdown configurations
+- ✅ Created .opencode/README.md with usage examples
+- ✅ Documented Ollama fallback integration
+- ✅ Listed all configuration options and best practices
+
+### Success Criteria - ALL MET ✅
+
+- ✅ OpenCode subagents configured with compatible model (GPT-4o)
+- ✅ Task tool can invoke subagents programmatically
+- ✅ All permissions follow principle of least privilege
+- ✅ System prompts provide consistent, structured output
+- ✅ Documentation covers all configuration options
+- ✅ Ollama CLI fallback available for local environments
+
+---
+
+## Configuration Summary
+
+### Git-Agent Configuration
+
+- **Model**: openai/gpt-4o
+- **Tools**: bash, read, grep (no edit/write)
+- **Max Steps**: 50
+- **Specialty**: Git operations with conventional commit standards
+
+### Tester-Agent Configuration
+
+- **Model**: openai/gpt-4o
+- **Tools**: bash, read, grep, glob (no edit/write)
+- **Max Steps**: 50
+- **Specialty**: Testing pipeline with quality thresholds
+
+### Primary Agents
+
+- **Build**: Full development with all tools
+- **Plan**: Analysis with subagent access
+
+### Ollama Fallback
+
+- **Script**: scripts/ollama-git-agent.sh
+- **Model**: orieg/gemma3-tools:4b
+- **Usage**: Direct CLI operations when OpenCode unavailable
