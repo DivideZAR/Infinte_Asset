@@ -316,6 +316,25 @@ async function generateHtml(
     });
     window._isAnimating = false;
 
+    // Track real start time for spawning (separate from animation time)
+    let __spawnStartTimeReal = null;
+
+    // Modified startAnimation to capture real time for spawning
+    const __originalStartAnimation = window.startAnimation;
+    window.startAnimation = function() {
+      __spawnStartTimeReal = Date.now();  // Real wall time, not overridden
+      window._isAnimating = true;
+      if (originalStartAnimation) {
+        originalStartAnimation();
+      }
+    };
+
+    // Provide accessor for spawning elapsed time
+    window.__getSpawnElapsed = function() {
+      if (!__spawnStartTimeReal) return 0;
+      return Date.now() - __spawnStartTimeReal;
+    };
+
     // Frame rendering function for browser-renderer
     window.renderFrame = function(frameNumber) {
       window.__currentFrame = frameNumber;

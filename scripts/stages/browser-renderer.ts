@@ -496,7 +496,7 @@ async function captureFrames(
           }, i)
 
           // Small wait for React to process updates
-          await page.waitForTimeout(10)
+          await page.waitForTimeout(50)
         }
 
         // Capture the frame
