@@ -1,5 +1,5 @@
 ---
-description: Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation. Automatically invoked for code quality tasks.
+description: 'Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation. Automatically invoked for code quality tasks.'
 mode: subagent
 model: ollama/gemma3-tools:4b
 temperature: 0.1

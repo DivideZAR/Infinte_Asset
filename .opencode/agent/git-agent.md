@@ -1,5 +1,5 @@
 ---
-description: Git operations: branch management, commits, merges, and repository analysis. Automatically invoked for git-related tasks.
+description: 'Git operations: branch management, commits, merges, and repository analysis. Automatically invoked for git-related tasks.'
 mode: subagent
 model: ollama/gemma3-tools:4b
 temperature: 0.1
