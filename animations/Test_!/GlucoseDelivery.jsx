@@ -268,7 +268,8 @@ const GlucoseDelivery = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (isAnimating && spawnRateRef.current > 0) {
-        const elapsed = window.__getSpawnElapsed ? window.__getSpawnElapsed() : (Date.now() - animationStartTimeRef.current);
+        // Use __frameProgress for elapsed time when in frame-based mode
+        const elapsed = window.__frameProgress !== undefined ? window.__frameProgress : (Date.now() - animationStartTimeRef.current);
 
         if (elapsed > 3000) {
           for (let i = 0; i < spawnRateRef.current; i++) {
