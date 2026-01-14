@@ -112,6 +112,83 @@ async function captureFrames(
       console.warn('Animation ready signal not received, continuing anyway...')
     }
 
+    // Auto-start animation - wait for button to appear then click it
+    try {
+      // Wait for button to be rendered by React (up to 3 seconds)
+      const buttonFound = await page.waitForFunction(
+        () => {
+          const buttons = document.querySelectorAll('button')
+          for (const btn of buttons) {
+            const text = (btn.textContent || '').toLowerCase()
+            const html = btn.innerHTML.toLowerCase()
+            if (text.includes('start') || html.includes('start') || html.includes('▶')) {
+              return true
+            }
+          }
+          return false
+        },
+        { timeout: 3000 },
+      )
+
+      if (buttonFound) {
+        // Click using dispatchEvent with real MouseEvent (works better with React)
+        try {
+          const clicked = await page.evaluate(() => {
+            const buttons = document.querySelectorAll('button')
+            for (const btn of buttons) {
+              const text = (btn.textContent || '').toLowerCase()
+              const html = btn.innerHTML.toLowerCase()
+              if (text.includes('start') || html.includes('start') || html.includes('▶')) {
+                const event = new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window,
+                })
+                return btn.dispatchEvent(event)
+              }
+            }
+            return false
+          })
+          if (clicked) {
+            console.log('Animation auto-started via START button')
+          } else {
+            throw new Error('Click not dispatched')
+          }
+        } catch {
+          // Fallback: try page.click
+          try {
+            await page.click('button:has-text("START")', { timeout: 5000 })
+            console.log('Animation auto-started via page.click')
+          } catch {
+            // Fallback: try any button with start text
+            await page.evaluate(() => {
+              const buttons = document.querySelectorAll('button')
+              for (const btn of buttons) {
+                const text = (btn.textContent || '').toLowerCase()
+                const html = btn.innerHTML.toLowerCase()
+                if (text.includes('start') || html.includes('start') || html.includes('▶')) {
+                  btn.click()
+                  return
+                }
+              }
+            })
+            console.log('Animation auto-started via fallback click')
+          }
+        }
+      }
+    } catch (e) {
+      // Fallback: try space key
+      try {
+        await page.keyboard.press('Space')
+        console.log('Animation started via space key')
+      } catch (e2) {
+        console.warn('Could not auto-start animation:', (e as Error).message)
+      }
+    }
+
+    // Give animation time to start after auto-trigger
+    await page.waitForTimeout(500)
+
     const totalFrames = Math.ceil(fullConfig.fps * fullConfig.duration)
     let frameCount = 0
 
@@ -162,6 +239,46 @@ async function captureFrames(
       const framePath = path.join(frameDir, `frame_${String(i).padStart(4, '0')}.png`)
 
       try {
+        // Advance time and trigger animation frames
+        const msPerFrame = Math.round(1000 / fullConfig.fps)
+        await page.evaluate((ms: number) => {
+          // Advance Date.now() by ms milliseconds
+          const now = Date.now()
+          Date.now = () => now + ms
+
+          // Trigger any pending requestAnimationFrame callbacks immediately
+          if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame = ((cb: (time: number) => void) => {
+              // Execute immediately with current time
+              try {
+                cb(Date.now())
+              } catch {
+                // Ignore errors
+              }
+              return 0
+            }) as typeof window.requestAnimationFrame
+
+            // Also trigger setTimeout callbacks immediately
+            window.setTimeout = ((cb: () => void, _delay: number) => {
+              try {
+                cb()
+              } catch {
+                // Ignore errors
+              }
+              return 0
+            }) as typeof window.setTimeout
+          }
+        }, msPerFrame)
+
+        // Force canvas repaint
+        await page.evaluate(() => {
+          const canvas = document.querySelector('canvas')
+          if (canvas) {
+            // Force reflow
+            canvas.offsetHeight
+          }
+        })
+
         // Render frame explicitly for smooth animation
         if (hasFrameBasedRendering) {
           await page.evaluate((frameNumber) => {
@@ -172,22 +289,12 @@ async function captureFrames(
         }
 
         if (hasCanvas) {
-          // Optimized: Get base64 data directly from largest canvas
-          const dataUrl = await page.evaluate(() => {
-            const canvases = Array.from(document.querySelectorAll('canvas'))
-            const canvas = canvases
-              .filter((c) => c.width > 0 && c.height > 0)
-              .sort((a, b) => b.width * b.height - a.width * a.height)[0]
-            return canvas ? canvas.toDataURL('image/png') : null
+          // Use screenshot instead of toDataURL for more reliable capture
+          await page.screenshot({
+            path: framePath,
+            fullPage: false,
+            timeout: 60000,
           })
-
-          if (dataUrl) {
-            const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '')
-            await fs.writeFile(framePath, base64Data, 'base64')
-          } else {
-            // Fallback if canvas disappeared or something went wrong
-            await page.screenshot({ path: framePath, fullPage: false })
-          }
         } else {
           // Standard: Full page screenshot
           await page.screenshot({

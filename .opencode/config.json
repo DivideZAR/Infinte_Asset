@@ -2,49 +2,83 @@
   "$schema": "https://opencode.ai/config.json",
   "agent": {
     "git-agent": {
-      "description": "Git operations and repository management",
+      "description": "Git operations: branch management, commits, merges, and repository analysis. Automatically invoked for git-related tasks.",
       "mode": "subagent",
-      "model": "anthropic/claude-sonnet-4-20250514",
+      "model": "ollama/granite4:7b-a1b-h-16k",
       "temperature": 0.1,
-      "tools": {
-        "bash": true,
-        "read": true,
-        "write": true,
-        "edit": true
-      },
-      "permission": {
-        "bash": {
-          "*": "allow",
-          "rm -rf /": "deny",
-          "sudo rm -rf *": "deny",
-          "format*": "deny",
-          "fdisk*": "deny"
-        }
-      }
-    },
-    "tester-agent": {
-      "description": "Testing pipeline and code quality validation",
-      "mode": "subagent",
-      "model": "anthropic/claude-haiku-4-20250514",
-      "temperature": 0.1,
+      "maxSteps": 50,
       "tools": {
         "bash": true,
         "read": true,
         "grep": true,
-        "webfetch": false
+        "edit": false,
+        "write": false
       },
       "permission": {
         "bash": {
-          "*": "allow",
+          "git status": "allow",
+          "git log*": "allow",
+          "git diff*": "allow",
+          "git branch*": "allow",
+          "git checkout*": "allow",
+          "git add*": "allow",
+          "git commit*": "allow",
+          "git stash*": "allow",
+          "git merge*": "ask",
+          "git push*": "ask",
+          "git pull*": "ask",
+          "git reset*": "ask",
+          "git rebase*": "ask",
+          "rm -rf /": "deny",
+          "sudo *": "deny",
+          "format*": "deny",
+          "fdisk*": "deny"
+        },
+        "edit": "ask",
+        "write": "ask"
+      },
+      "task": {
+        "tester-agent": "allow"
+      }
+    },
+    "tester-agent": {
+      "description": "Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation. Automatically invoked for code quality tasks.",
+      "mode": "subagent",
+      "model": "ollama/granite4:7b-a1b-h-16k",
+      "temperature": 0.1,
+      "maxSteps": 50,
+      "tools": {
+        "bash": true,
+        "read": true,
+        "grep": true,
+        "glob": true,
+        "edit": false,
+        "write": false
+      },
+      "permission": {
+        "bash": {
+          "npm test*": "allow",
+          "npm run typecheck*": "allow",
+          "npm run lint*": "allow",
+          "npm run build*": "allow",
+          "npm run test:coverage*": "allow",
+          "npm run *": "allow",
           "npm publish": "deny",
           "git push --force": "deny",
           "rm -rf /": "deny",
           "sudo *": "deny"
-        }
+        },
+        "edit": "ask",
+        "write": "ask"
+      },
+      "task": {
+        "git-agent": "allow"
       }
     },
     "build": {
       "mode": "primary",
+      "model": "ollama/granite4:7b-a1b-h-16k",
+      "temperature": 0.1,
       "permission": {
         "task": {
           "*": "allow",
@@ -55,6 +89,8 @@
     },
     "plan": {
       "mode": "primary",
+      "model": "ollama/granite4:7b-a1b-h-16k",
+      "temperature": 0.1,
       "permission": {
         "task": {
           "*": "allow",
@@ -78,6 +114,9 @@
       "enabled": true
     },
     "grep": {
+      "enabled": true
+    },
+    "glob": {
       "enabled": true
     }
   }
