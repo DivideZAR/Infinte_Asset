@@ -1,7 +1,7 @@
 ---
 description: Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation. Automatically invoked for code quality tasks.
 mode: subagent
-model: openai/gpt-4o
+model: ollama/gemma3-tools:4b
 temperature: 0.1
 maxSteps: 50
 tools:

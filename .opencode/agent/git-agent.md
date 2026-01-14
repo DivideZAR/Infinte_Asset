@@ -1,7 +1,7 @@
 ---
 description: Git operations: branch management, commits, merges, and repository analysis. Automatically invoked for git-related tasks.
 mode: subagent
-model: openai/gpt-4o
+model: ollama/gemma3-tools:4b
 temperature: 0.1
 maxSteps: 50
 tools:
