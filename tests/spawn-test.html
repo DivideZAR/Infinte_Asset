@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cube Spawn Test - Isolated</title>
+    <style>
+      body {
+        margin: 0;
+        background: #0a0a0f;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: 'Rajdhani', sans-serif;
+      }
+      #testCanvas {
+        background: linear-gradient(180deg, #0a0a0f 0%, #1a1520 100%);
+        border: 2px solid #333;
+      }
+      #console {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: #0f0;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        width: 400px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="testCanvas" width="800" height="600"></canvas>
+    <div id="console"></div>
+
+    <script>
+      // Logging utility
+      const consoleDiv = document.getElementById('console')
+      function log(msg) {
+        const line = document.createElement('div')
+        line.textContent = msg
+        consoleDiv.appendChild(line)
+        consoleDiv.scrollTop = consoleDiv.scrollHeight
+        console.log(msg)
+      }
+
+      // Canvas setup
+      const canvas = document.getElementById('testCanvas')
+      const ctx = canvas.getContext('2d')
+
+      // State
+      let isAnimating = false
+      let doorsOpen = false
+      let spawnRate = 0
+      let animationStartTime = 0
+      let cubes = []
+
+      // Track time progression
+      let frameTimeBase = 0
+      let frameProgress = 0
+
+      // GlucoseCube class (from GlucoseDelivery.jsx)
+      class GlucoseCube {
+        constructor(x, y) {
+          this.x = x
+          this.y = y
+          this.size = Math.random() * 15 + 10
+          this.speedX = (Math.random() - 0.5) * 3
+          this.speedY = Math.random() * 4 + 2
+          this.rotation = Math.random() * Math.PI * 2
+          this.rotationSpeed = (Math.random() - 0.5) * 0.1
+          this.glow = Math.random() * 0.5 + 0.5
+          this.glowDirection = Math.random() > 0.5 ? 1 : -1
+          this.settled = false
+          this.settledY = canvas.height * 0.6 + Math.random() * canvas.height * 0.35
+        }
+
+        update() {
+          if (!this.settled) {
+            this.x += this.speedX
+            this.y += this.speedY
+            this.rotation += this.rotationSpeed
+
+            if (this.y > this.settledY) {
+              this.speedY *= 0.9
+              this.speedX *= 0.95
+              if (Math.abs(this.speedY) < 0.1) {
+                this.settled = true
+              }
+            }
+
+            if (this.x < 80 || this.x > canvas.width - 80) {
+              this.speedX *= -0.8
+              this.x = Math.max(80, Math.min(canvas.width - 80, this.x))
+            }
+          }
+
+          this.glow += 0.02 * this.glowDirection
+          if (this.glow > 1 || this.glow < 0.5) {
+            this.glowDirection *= -1
+          }
+        }
+
+        draw(ctx) {
+          ctx.save()
+          ctx.translate(this.x, this.y)
+          ctx.rotate(this.rotation)
+
+          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size * 2)
+          gradient.addColorStop(0, `rgba(255, 200, 50, ${this.glow * 0.3})`)
+          gradient.addColorStop(1, 'rgba(255, 200, 50, 0)')
+          ctx.fillStyle = gradient
+          ctx.fillRect(-this.size * 2, -this.size * 2, this.size * 4, this.size * 4)
+
+          ctx.fillStyle = `rgba(255, 200, 50, ${this.glow})`
+          ctx.shadowColor = '#ffcc00'
+          ctx.shadowBlur = 15
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size)
+
+          ctx.fillStyle = `rgba(255, 255, 200, ${this.glow * 0.5})`
+          ctx.fillRect(-this.size / 2, -this.size / 2, this.size / 3, this.size / 3)
+
+          ctx.restore()
+        }
+      }
+
+      // Draw door
+      function drawDoor() {
+        const doorWidth = 160
+        const doorHeight = 200
+        const doorX = canvas.width / 2 - doorWidth / 2
+        const doorY = canvas.height * 0.1 + 250
+
+        // Door frame
+        ctx.fillStyle = '#333'
+        ctx.fillRect(doorX - 10, doorY - 10, doorWidth + 20, doorHeight + 20)
+
+        // Door opening (dark)
+        ctx.fillStyle = '#0a0a0f'
+        ctx.fillRect(doorX, doorY, doorWidth, doorHeight)
+
+        if (doorsOpen) {
+          // Draw open door visual
+          ctx.fillStyle = '#1a1a2e'
+          // Left door
+          ctx.fillRect(doorX, doorY, doorWidth / 2 - 5, doorHeight)
+          // Right door
+          ctx.fillRect(doorX + doorWidth / 2 + 5, doorY, doorWidth / 2 - 5, doorHeight)
+        } else {
+          // Closed door
+          ctx.fillStyle = '#2a2a3e'
+          ctx.fillRect(doorX, doorY, doorWidth, doorHeight)
+
+          // Door stripes
+          ctx.fillStyle = '#ff6b6b'
+          ctx.fillRect(doorX, doorY + 20, doorWidth, 5)
+          ctx.fillRect(doorX, doorY + doorHeight - 25, doorWidth, 5)
+        }
+      }
+
+      // Draw spawn area indicator
+      function drawSpawnArea() {
+        if (spawnRate > 0) {
+          ctx.strokeStyle = 'rgba(255, 200, 50, 0.3)'
+          ctx.lineWidth = 2
+          ctx.setLineDash([5, 5])
+          ctx.strokeRect(canvas.width / 2 - 100, canvas.height * 0.1 + 300 - 20, 200, 40)
+          ctx.setLineDash([])
+        }
+      }
+
+      // Start animation
+      function startAnimation() {
+        if (isAnimating) return
+
+        isAnimating = true
+        doorsOpen = false
+        spawnRate = 0
+        cubes = []
+
+        // Capture start time
+        animationStartTime = Date.now()
+        frameTimeBase = animationStartTime
+        frameProgress = 0
+
+        log(`[START] Animation started at real time: ${animationStartTime}`)
+        log(`[START] frameTimeBase: ${frameTimeBase}`)
+
+        // Timeline events
+        setTimeout(() => {
+          log(`[2s] ALARM triggered`)
+          // Flash effect
+        }, 2000)
+
+        setTimeout(() => {
+          doorsOpen = true
+          log(`[4s] Doors opened`)
+        }, 4000)
+
+        setTimeout(() => {
+          spawnRate = 3
+          log(`[6s] Spawn rate: 3/sec (first cubes)`)
+        }, 6000)
+
+        setTimeout(() => {
+          spawnRate = 6
+          log(`[8s] Spawn rate: 6/sec`)
+        }, 8000)
+
+        setTimeout(() => {
+          spawnRate = 10
+          log(`[10s] Spawn rate: 10/sec`)
+        }, 10000)
+
+        setTimeout(() => {
+          spawnRate = 15
+          log(`[12s] Spawn rate: 15/sec`)
+        }, 12000)
+
+        setTimeout(() => {
+          spawnRate = 12
+          log(`[15s] Spawn rate: 12/sec (walls shaking)`)
+        }, 15000)
+
+        animate()
+      }
+
+      // Animation loop
+      function animate() {
+        if (!isAnimating) return
+
+        // Calculate elapsed time
+        const elapsed = Date.now() - animationStartTime
+        const elapsedSeconds = (elapsed / 1000).toFixed(1)
+
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        // Draw spawn area
+        drawSpawnArea()
+
+        // Draw door
+        drawDoor()
+
+        // Spawn cubes (every frame when elapsed > 3s and spawnRate > 0)
+        if (elapsed > 3000 && spawnRate > 0) {
+          for (let i = 0; i < spawnRate; i++) {
+            const x = canvas.width / 2 + (Math.random() - 0.5) * 200
+            const y = canvas.height * 0.1 + 300
+            cubes.push(new GlucoseCube(x, y))
+          }
+          if (cubes.length > 0 && cubes.length % spawnRate === 0) {
+            log(
+              `[${elapsedSeconds}s] Spawned cube #${cubes.length} (rate: ${spawnRate}, total: ${cubes.length})`,
+            )
+          }
+        }
+
+        // Update and draw cubes
+        cubes.forEach((cube) => {
+          cube.update()
+          cube.draw(ctx)
+        })
+
+        // Draw info
+        ctx.fillStyle = '#fff'
+        ctx.font = '14px monospace'
+        ctx.fillText(`Time: ${elapsedSeconds}s`, 10, 20)
+        ctx.fillText(`Cubes: ${cubes.length}`, 10, 40)
+        ctx.fillText(`Spawn Rate: ${spawnRate}/frame`, 10, 60)
+        ctx.fillText(`Doors: ${doorsOpen ? 'OPEN' : 'CLOSED'}`, 10, 80)
+
+        // Continue animation
+        requestAnimationFrame(animate)
+      }
+
+      // Auto-start
+      log('Auto-starting animation in 1 second...')
+      setTimeout(() => {
+        startAnimation()
+      }, 1000)
+
+      // Log initial state
+      log('=== Cube Spawn Test Started ===')
+      log(`Canvas size: ${canvas.width}x${canvas.height}`)
+      log(`Spawn position: x=${canvas.width / 2}, y=${canvas.height * 0.1 + 300}`)
+      log('Waiting to start...')
+    </script>
+  </body>
+</html>

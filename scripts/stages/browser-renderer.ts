@@ -399,29 +399,30 @@ async function captureFrames(
           // For frame-based rendering, advance time and trigger updates
           const msPerFrame = Math.round(1000 / fullConfig.fps)
 
-          // Advance time by one frame and handle timeouts
+          // Advance time by one frame and handle timing
           await page.evaluate((ms: number) => {
-            // Initialize frame-based time tracking if not already done
+            // Check if this is the first frame by checking if __frameTimeBase exists
+            // We use a property that persists across page.evaluate calls
             if (typeof window.__frameTimeBase === 'undefined') {
-              window.__frameTimeBase = Date.now()
+              // Initialize time tracking - capture real time as base
+              window.__frameTimeBase = Date.now() // Real wall-clock time
               window.__frameProgress = 0
             }
 
             // Advance frame progress
             window.__frameProgress += ms
 
-            // Override Date.now to return the advanced time
+            // Calculate advanced time (starts at real time, advances with each frame)
             const advancedTime = window.__frameTimeBase + window.__frameProgress
+
+            // Override Date.now to return the advanced time
             Date.now = () => advancedTime
 
             // Override setTimeout to execute callbacks when their delay is reached
             const originalSetTimeout = window.setTimeout
-            const timeoutIds: number[] = []
             window.setTimeout = ((cb: () => void, delay: number) => {
-              // Calculate absolute time when this callback should fire
               const targetTime = advancedTime + delay
 
-              // Check if we should fire immediately
               if (targetTime <= advancedTime) {
                 try {
                   cb()
@@ -431,12 +432,43 @@ async function captureFrames(
                 return 0
               }
 
-              // Otherwise, schedule with adjusted delay
               const adjustedDelay = targetTime - advancedTime
-              const id = originalSetTimeout(cb, adjustedDelay)
-              timeoutIds.push(id)
-              return id
+              return originalSetTimeout(cb, adjustedDelay)
             }) as typeof window.setTimeout
+
+            // Override setInterval
+            window.setInterval
+            const intervalData = new Map<
+              number,
+              { cb: () => void; targetTime: number; delay: number }
+            >()
+            let nextIntervalId = 0
+            window.setInterval = ((cb: () => void, delay: number) => {
+              const id = ++nextIntervalId
+              intervalData.set(id, {
+                cb,
+                targetTime: advancedTime + delay,
+                delay,
+              })
+              return id
+            }) as typeof window.setInterval
+
+            window.clearInterval = ((_id: number) => {
+              intervalData.delete(_id)
+            }) as typeof window.clearInterval
+
+            // Trigger due intervals
+            intervalData.forEach((data, _id) => {
+              if (advancedTime >= data.targetTime) {
+                try {
+                  data.cb()
+                  // Reschedule for next interval
+                  data.targetTime = advancedTime + data.delay
+                } catch {
+                  // Ignore errors
+                }
+              }
+            })
 
             // Override requestAnimationFrame
             if (typeof window.requestAnimationFrame === 'function') {
@@ -449,6 +481,11 @@ async function captureFrames(
                 return 0
               }) as typeof window.requestAnimationFrame
             }
+
+            // Override cancelAnimationFrame
+            window.cancelAnimationFrame = ((_id: number) => {
+              // No-op since we're overriding requestAnimationFrame
+            }) as typeof window.cancelAnimationFrame
           }, msPerFrame)
 
           // Call renderFrame to trigger timeline events and updates
@@ -459,7 +496,7 @@ async function captureFrames(
           }, i)
 
           // Small wait for React to process updates
-          await page.waitForTimeout(10)
+          await page.waitForTimeout(50)
         }
 
         // Capture the frame
