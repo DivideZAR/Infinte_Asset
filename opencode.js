@@ -21,6 +21,14 @@ export const ollamaConfig = {
   maxSteps: 50,
 }
 
+// Ollama 16K Context Configuration (Extended Context Window)
+export const ollama16kConfig = {
+  provider: 'ollama',
+  model: 'orieg/gemma3-tools:4b-16K',
+  temperature: 0.1,
+  maxSteps: 50,
+}
+
 // Anthropic Configuration (Alternative)
 export const anthropicConfig = {
   provider: 'anthropic',
@@ -37,7 +45,7 @@ export const agentConfigs = {
   'git-agent': {
     description: 'Git operations: branch management, commits, merges, and repository analysis',
     mode: 'subagent',
-    ...openaiConfig,
+    ...ollama16kConfig,
     tools: ['bash', 'read', 'grep'],
     permissions: {
       bash: {
@@ -61,7 +69,7 @@ export const agentConfigs = {
     description:
       'Testing pipeline: runs TypeScript checks, linting, Jest tests, and build validation',
     mode: 'subagent',
-    ...openaiConfig,
+    ...ollama16kConfig,
     tools: ['bash', 'read', 'grep', 'glob'],
     permissions: {
       bash: {
@@ -101,5 +109,6 @@ export function getModelId(config = defaultConfig) {
 export const availableProviders = {
   openai: openaiConfig,
   ollama: ollamaConfig,
+  ollama16k: ollama16kConfig,
   anthropic: anthropicConfig,
 }
