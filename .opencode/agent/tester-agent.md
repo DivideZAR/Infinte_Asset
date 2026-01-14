@@ -1,7 +1,7 @@
 ---
 description: Comprehensive testing pipeline for code quality and validation
 mode: subagent
-model: orieg/gemma3-tools:4b
+model: ollama/gemma3-tools:4b
 temperature: 0.1
 tools:
   bash: true
