@@ -1,33 +1,37 @@
-# Tester Agent
+# Tester Agent - DEPRECATED
 
-A comprehensive code testing and correction agent for the Infinte_Asset project.
+> **This file is deprecated.** Use `scripts/tester-cli.js` instead.
 
-## Features
+## Migration
 
-- **Full Test Suite**: Run typecheck, lint, tests, and build in sequence
-- **Individual Commands**: Run any test-related command independently
-- **Test Analysis**: Parse and display test results, errors, and coverage
-- **Auto-fixing**: Automatically fix ESLint issues and verify with re-run tests
-- **Coverage Reporting**: Generate and analyze coverage reports with threshold checking
-- **Artifact Management**: Clean up test/build artifacts
+Replace all references to `node scripts/tester-cli.js` with `node scripts/tester-cli.js`.
 
-## Usage
-
-### Quick Start
+### New Usage
 
 ```bash
 # Run full test suite
-node scripts/tester.js full
+node scripts/tester-cli.js all
 
-# Run quick test
-node scripts/tester.js test
+# Quick status check
+node scripts/tester-cli.js status
 
-# Fix linting issues and re-test
-node scripts/tester.js fix
-
-# Start watch mode
-node scripts/tester.js watch
+# Individual checks
+node scripts/tester-cli.js typecheck
+node scripts/tester-cli.js lint
+node scripts/tester-cli.js test
+node scripts/tester-cli.js build
 ```
+
+Or use the npm bin if installed:
+
+```bash
+tester status
+tester all
+```
+
+---
+
+## Old Documentation (Deprecated)
 
 ### Available Commands
 
@@ -93,20 +97,20 @@ The agent provides color-coded output:
 
 ```bash
 # 1. Run full check
-node scripts/tester.js full
+node scripts/tester-cli.js full
 
 # 2. Fix any issues
-node scripts/tester.js fix
+node scripts/tester-cli.js fix
 
 # 3. Verify with full check
-node scripts/tester.js full
+node scripts/tester-cli.js full
 ```
 
 ### Example 2: Watch Mode for TDD
 
 ```bash
 # Start watching for changes
-node scripts/tester.js watch
+node scripts/tester-cli.js watch
 
 # In another terminal, make changes
 # Tests will auto-re-run on file changes
@@ -116,7 +120,7 @@ node scripts/tester.js watch
 
 ```bash
 # Generate coverage with 80% threshold
-node scripts/tester.js coverage
+node scripts/tester-cli.js coverage
 
 # Output will show:
 # - Coverage percentages for statements, branches, functions, lines
@@ -128,10 +132,10 @@ node scripts/tester.js coverage
 ```yaml
 # .github/workflows/ci.yml
 - name: Run tests
-  run: node scripts/tester.js full
+  run: node scripts/tester-cli.js full
 
 - name: Generate coverage
-  run: node scripts/tester.js coverage
+  run: node scripts/tester-cli.js coverage
   if: success()
 ```
 
@@ -187,20 +191,20 @@ console.log(info.scripts) // Available scripts
 
 ```bash
 # Find failing tests
-node scripts/tester.js find-failing
+node scripts/tester-cli.js find-failing
 
 # Get details
-node scripts/tester.js test --verbose
+node scripts/tester-cli.js test --verbose
 ```
 
 ### Lint Won't Fix
 
 ```bash
 # Try manual fix
-node scripts/tester.js lint
+node scripts/tester-cli.js lint
 
 # Clean cache
-node scripts/tester.js clean
+node scripts/tester-cli.js clean
 ```
 
 ### Type Check Errors
@@ -210,5 +214,5 @@ node scripts/tester.js clean
 npm run typecheck 2>&1 | head -50
 
 # Fix errors, then verify
-node scripts/tester.js typecheck
+node scripts/tester-cli.js typecheck
 ```
