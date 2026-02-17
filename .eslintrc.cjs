@@ -78,5 +78,6 @@ module.exports = {
     '*.config.js',
     '*.config.ts',
     'animations/**',
+    'vendor/',
   ],
 }
