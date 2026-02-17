@@ -128,9 +128,9 @@ Edit this file directly and update task statuses.
 
 ### Next Priority Actions
 
-1. **Fix Jest configuration** - In Progress (4 subtasks)
-2. **Clean up git history** - Pending (4 subtasks)
-3. **Simplify Tester_Agent** - Completed (removed corrupted files, use CLI)
+1. **Fix Jest configuration** - ✅ Completed
+2. **Clean up git history** - ✅ Completed
+3. **Simplify Tester_Agent** - ✅ Completed
 
 ---
 
@@ -826,6 +826,19 @@ npx tsx scripts/stages/pipeline.ts \
 
 ### Remaining Tasks
 
-- [ ] Test with additional animations to verify robustness
+- [x] Test with additional animations to verify robustness - Done (found bug - see below)
 - [ ] Add unit tests for timing overrides
 - [ ] Consider refactoring timing logic into separate module
+
+### Animation Testing Results
+
+**Test: NewScene1_fixed (Scene1)**
+
+- Status: ❌ FAILED
+- Error: `App is not defined`
+- Root Cause: html-generator.ts uses `App` as default component name but actual component is `TheInfluxAnimation`
+- Fix Needed: Improve component name detection in html-generator.ts
+
+### Known Bug Found
+
+The html-generator.ts has a bug where it defaults to using `App` as the component name when it can't detect the actual component name. This causes "App is not defined" errors when the animation uses a different component name (e.g., `TheInfluxAnimation`).

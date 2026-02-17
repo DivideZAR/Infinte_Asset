@@ -240,19 +240,20 @@ async function generateHtml(
   for (const file of animationFiles) {
     const content = await fs.readFile(file, 'utf-8')
     const relativePath = path.relative(animationDir, file)
-    // Skip index.jsx files that just re-export from other files
-    if (path.basename(file).toLowerCase().startsWith('index.')) {
-      // If this is a re-export file, extract the actual component and include it
-      const exportMatch = content.match(/export\s*\{\s*default\s*\}\s*from\s*['"]([^'"]+)['"]/)
-      if (exportMatch) {
-        const importPath = exportMatch[1]
-        const resolvedPath = path.resolve(animationDir, importPath)
-        if (await fs.pathExists(resolvedPath)) {
-          const actualContent = await fs.readFile(resolvedPath, 'utf-8')
-          combinedCode += `// File: ${relativePath} -> ${importPath}\n${actualContent}\n\n`
-        }
+
+    // Check if this is a re-export file (export { default } from './something')
+    const exportMatch = content.match(/export\s*\{\s*default\s*\}\s*from\s*['"]([^'"]+)['"]/)
+
+    if (exportMatch) {
+      // This is a re-export - load the actual component file
+      const importPath = exportMatch[1]
+      const resolvedPath = path.resolve(animationDir, importPath)
+      if (await fs.pathExists(resolvedPath)) {
+        const actualContent = await fs.readFile(resolvedPath, 'utf-8')
+        combinedCode += `// File: ${relativePath} -> ${importPath}\n${actualContent}\n\n`
       }
     } else {
+      // Not a re-export - include the file directly
       combinedCode += `// File: ${relativePath}\n${content}\n\n`
     }
   }
