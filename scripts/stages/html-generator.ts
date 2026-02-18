@@ -48,6 +48,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
   <script>
     {THREE_SOURCE}
   </script>
+  {FRAMER_SOURCE}
   <script>
     const { useState, useEffect, useRef, useCallback, useMemo, useContext, useReducer } = React;
   </script>
@@ -225,6 +226,7 @@ async function generateHtml(
     'utf-8',
   )
   const threeSource = await fs.readFile(path.join(vendorDir, 'three.min.js'), 'utf-8')
+  const framerSource = await fs.readFile(path.join(vendorDir, 'framer-motion.min.js'), 'utf-8')
 
   const prebuiltHtmlPath = path.join(animationDir, 'index.html')
   if (await fs.pathExists(prebuiltHtmlPath)) {
@@ -380,12 +382,20 @@ async function generateHtml(
 
   // Check if the animation contains 3D content to determine if Three.js should be included
   let hasThreeReference = false
+  let hasFramerMotion = false
   const files = await collectAnimationFiles(animationDir)
   for (const file of files) {
     const content = await fs.readFile(file, 'utf-8')
     if (content.includes('THREE') || content.includes('three') || content.includes('Three')) {
       hasThreeReference = true
-      break
+    }
+    if (
+      content.includes('framer-motion') ||
+      content.includes('motion.') ||
+      content.includes('from "motion') ||
+      content.includes("from 'motion")
+    ) {
+      hasFramerMotion = true
     }
   }
 
@@ -436,6 +446,20 @@ async function generateHtml(
     htmlContent = htmlContent.replace('</body>', `${frameBasedScript}\n</body>`)
   } else {
     htmlContent = htmlContent.replace('{THREE_SOURCE}', '')
+  }
+
+  // Inject framer-motion if detected
+  if (hasFramerMotion) {
+    const framerIndex = htmlContent.indexOf('{FRAMER_SOURCE}')
+    if (framerIndex !== -1) {
+      htmlContent =
+        htmlContent.substring(0, framerIndex) +
+        `<script>${framerSource}</script>` +
+        htmlContent.substring(framerIndex + '{FRAMER_SOURCE}'.length)
+    }
+    console.log('[INFO] Detected framer-motion, injected into HTML')
+  } else {
+    htmlContent = htmlContent.replace('{FRAMER_SOURCE}', '')
   }
 
   const htmlPath = path.join(outputDir, 'animation.html')

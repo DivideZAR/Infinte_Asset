@@ -37,6 +37,7 @@
     "animations/walking-dog",
     "animations/walling-dog-v2",
     "animations/walling-dog",
+    "animations/Scene1_New",
     "animations/**/node_modules"
   ]
 }

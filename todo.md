@@ -826,11 +826,20 @@ npx tsx scripts/stages/pipeline.ts \
 
 ### Remaining Tasks
 
-- [x] Test with additional animations to verify robustness - Done (found bug - see below)
-- [ ] Add unit tests for timing overrides
-- [ ] Consider refactoring timing logic into separate module
+- [x] Test with additional animations to verify robustness - Done
+- [x] Add unit tests for timing overrides - Done (19 tests, 27 total passing)
+- [x] Refactor timing logic into separate module - Done (scripts/utils/timing.ts)
 
-### Animation Testing Results
+### framer-motion Support (Completed)
+
+- [x] Download framer-motion library to vendor/
+- [x] Update html-generator.ts to detect and inject framer-motion
+- [x] Update HTML template with placeholder
+- [x] Test with Test_ani animation - **Library works!** Error is in animation code, not framer-motion
+
+**Result**: framer-motion is successfully detected and injected. The Test_ani animation has a pre-existing bug (incorrect `useEffect` usage).
+
+### Animation Testing Results (Completed)
 
 **Test: NewScene1_fixed (Scene1)**
 
