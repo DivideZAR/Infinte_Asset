@@ -403,6 +403,17 @@ This section provides a template for AI code generators to create animations tha
 
 ---
 
+### YOUR ANIMATION DESCRIPTION
+
+Describe your animation here when using this template with an AI code generator:
+
+```
+Example: "Create a 3D scene with a rotating red cube on a dark background.
+The cube should rotate on both X and Y axes continuously."
+```
+
+---
+
 ### IMPORTANT: Required Setup for Video Conversion
 
 For your animation to be converted to MP4, it MUST follow one of these patterns:
