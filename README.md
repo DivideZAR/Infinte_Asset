@@ -395,8 +395,165 @@ You are an expert React Animation developer. Your task is to generate a standalo
 
 **Goal:** Create a visually appealing animation that loops seamlessly if possible.
 
-========================================
-🎯 COPY END HERE: AI SYSTEM PROMPT 🎯
-========================================
+---
+
+## Animation Code Template for AI Developers
+
+This section provides a template for AI code generators to create animations that work with this video conversion pipeline.
+
+---
+
+### IMPORTANT: Required Setup for Video Conversion
+
+For your animation to be converted to MP4, it MUST follow one of these patterns:
+
+| ✅ WORKS               | ❌ DOESN'T WORK                                    |
+| ---------------------- | -------------------------------------------------- |
+| THREE.js (recommended) | React useState + useEffect + requestAnimationFrame |
+| HTML5 Canvas API       | framer-motion                                      |
+| WebGL                  | Remotion                                           |
+|                        | CSS animations (not captured)                      |
+
+---
+
+### Template Option 1: THREE.js (Recommended)
+
+```jsx
+import React, { useEffect, useRef } from 'react'
+import * as THREE from 'three'
+
+export default function MyAnimation() {
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    // === YOUR SCENE SETUP HERE ===
+    const scene = new THREE.Scene()
+    scene.background = new THREE.Color(0x000000)
+
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    )
+    const renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setSize(window.innerWidth, window.innerHeight)
+    containerRef.current.appendChild(renderer.domElement)
+
+    // === YOUR ANIMATION OBJECTS HERE ===
+    const geometry = new THREE.BoxGeometry(1, 1, 1)
+    const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 })
+    const cube = new THREE.Mesh(geometry, material)
+    scene.add(cube)
+
+    camera.position.z = 5
+
+    // === ANIMATION LOOP (FRAME-BASED) ===
+    const animate = () => {
+      // Update your animation here
+      cube.rotation.x += 0.01
+      cube.rotation.y += 0.01
+
+      renderer.render(scene, camera)
+      requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    // === IMPORTANT: SIGNAL READY ===
+    window.animationReady = true
+
+    // === CLEANUP ===
+    return () => {
+      if (containerRef.current && renderer.domElement) {
+        containerRef.current.removeChild(renderer.domElement)
+      }
+      renderer.dispose()
+    }
+  }, [])
+
+  return <div ref={containerRef} style={{ width: '100%', height: '100vh', background: '#000' }} />
+}
+```
+
+---
+
+### Template Option 2: HTML5 Canvas
+
+```jsx
+import React, { useEffect, useRef } from 'react'
+
+export default function MyAnimation() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    canvas.width = 800
+    canvas.height = 600
+
+    let x = 0
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // === YOUR DRAWING CODE HERE ===
+      ctx.fillStyle = '#00ff00'
+      ctx.fillRect(x, 300, 50, 50)
+      x = (x + 2) % canvas.width
+
+      requestAnimationFrame(animate)
+    }
+
+    animate()
+
+    // === IMPORTANT: SIGNAL READY ===
+    window.animationReady = true
+  }, [])
+
+  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+}
+```
+
+---
+
+### What NOT to Use
+
+These patterns will NOT work with the video conversion pipeline:
+
+```jsx
+// ❌ BAD: React state-based animation (produces static video)
+const [progress, setProgress] = useState(0)
+useEffect(() => {
+  const loop = () => {
+    setProgress((p) => p + 0.01) // Won't animate in video!
+    requestAnimationFrame(loop)
+  }
+  loop()
+}, [])
+
+// ❌ BAD: framer-motion (not supported)
+import { motion } from 'framer-motion'
+
+// ❌ BAD: Remotion (not supported)
+import { Composition } from 'remotion'
+```
+
+---
+
+### Quick Checklist for AI Developers
+
+- [ ] Using THREE.js or Canvas API
+- [ ] Animation loop uses requestAnimationFrame
+- [ ] Includes window.animationReady = true signal
+- [ ] Exports as default function
+- [ ] NO useState for animation progress
+- [ ] NO framer-motion or Remotion
+
+---
 
 ## System Prompt Template for AI Agents
