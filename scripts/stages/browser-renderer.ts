@@ -326,8 +326,13 @@ async function captureFrames(
     )
 
     // Check if frame-based rendering is available
+    // Accepts either: window.renderFrame + window.__animationScene (THREE.js style)
+    // Or: window.renderFrame + window.animationReady (Canvas style)
     const hasFrameBasedRendering = await page.evaluate(() => {
-      return typeof window.renderFrame === 'function' && typeof window.__animationScene !== null
+      return (
+        typeof window.renderFrame === 'function' &&
+        (typeof window.__animationScene !== 'undefined' || window.animationReady === true)
+      )
     })
     console.log(
       `Rendering mode: ${hasFrameBasedRendering ? 'Frame-based (smooth)' : 'Continuous (may flicker)'}`,

@@ -420,14 +420,17 @@ For your animation to be converted to MP4, it MUST follow one of these patterns:
 
 | ✅ WORKS               | ❌ DOESN'T WORK                                    |
 | ---------------------- | -------------------------------------------------- |
-| THREE.js (recommended) | React useState + useEffect + requestAnimationFrame |
-| HTML5 Canvas API       | framer-motion                                      |
-| WebGL                  | Remotion                                           |
-|                        | CSS animations (not captured)                      |
+| THREE.js (frame-based) | React useState + useEffect + requestAnimationFrame |
+| Canvas (frame-based)   | framer-motion                                      |
+| WebGL (frame-based)    | Remotion                                           |
+|                        | Canvas with real-time RAF                          |
+|                        | CSS animations                                     |
+
+**Critical:** Use `window.renderFrame(frameNumber)` for frame-based rendering!
 
 ---
 
-### Template Option 1: THREE.js (Recommended)
+### Template Option 1: THREE.js (FRAME-BASED - Recommended)
 
 ```jsx
 import React, { useEffect, useRef } from 'react'
@@ -461,19 +464,27 @@ export default function MyAnimation() {
 
     camera.position.z = 5
 
-    // === ANIMATION LOOP (FRAME-BASED) ===
-    const animate = () => {
-      // Update your animation here
-      cube.rotation.x += 0.01
-      cube.rotation.y += 0.01
+    // === FRAME-BASED RENDERING (required for video capture) ===
+    // The video capture system calls this function for each frame
+    window.renderFrame = (frameNumber) => {
+      // Calculate progress (0 to 1) based on frame number
+      // Default: 30fps, 5 seconds = 150 frames
+      const fps = 30
+      const duration = 5
+      const totalFrames = fps * duration
+      const t = frameNumber / totalFrames // t from 0 to 1
+
+      // Update animation based on 't' (progress)
+      cube.rotation.x = t * Math.PI * 2 // Full rotation over video
+      cube.rotation.y = t * Math.PI * 2
 
       renderer.render(scene, camera)
-      requestAnimationFrame(animate)
     }
 
-    animate()
+    // Initial render
+    renderer.render(scene, camera)
 
-    // === IMPORTANT: SIGNAL READY ===
+    // === SIGNAL READY ===
     window.animationReady = true
 
     // === CLEANUP ===
@@ -491,7 +502,62 @@ export default function MyAnimation() {
 
 ---
 
-### Template Option 2: HTML5 Canvas
+### Template Option 2: HTML5 Canvas (FRAME-BASED - Recommended)
+
+```jsx
+import React, { useEffect, useRef } from 'react'
+
+export default function MyAnimation() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const ctx = canvas.getContext('2d')
+    canvas.width = 800
+    canvas.height = 600
+
+    // === DRAW FUNCTION (called by render system) ===
+    const drawScene = (t) => {
+      // t = animation progress from 0 to 1
+      // This is called by the video capture system, not RAF
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      // === YOUR DRAWING CODE HERE ===
+      // Use 't' parameter for animation progress (0 = start, 1 = end)
+      const x = t * canvas.width
+      ctx.fillStyle = '#00ff00'
+      ctx.fillRect(x, 300, 50, 50)
+    }
+
+    // === FRAME-BASED RENDERING (required for video capture) ===
+    // The video capture system calls this function for each frame
+    window.renderFrame = (frameNumber) => {
+      // Calculate progress (0 to 1) based on frame number
+      // Default: 30fps, 5 seconds = 150 frames
+      const fps = 30
+      const duration = 5
+      const totalFrames = fps * duration
+      const t = frameNumber / totalFrames
+
+      drawScene(t)
+    }
+
+    // === SIGNAL READY ===
+    window.animationReady = true
+  }, [])
+
+  return <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+}
+```
+
+---
+
+### Template Option 3: HTML5 Canvas (REAL-TIME - Not Recommended)
+
+This approach uses requestAnimationFrame but may not work reliably with video capture:
 
 ```jsx
 import React, { useEffect, useRef } from 'react'
@@ -559,11 +625,14 @@ import { Composition } from 'remotion'
 ### Quick Checklist for AI Developers
 
 - [ ] Using THREE.js or Canvas API
-- [ ] Animation loop uses requestAnimationFrame
+- [ ] Uses window.renderFrame(frameNumber) for frame-based rendering
 - [ ] Includes window.animationReady = true signal
 - [ ] Exports as default function
 - [ ] NO useState for animation progress
+- [ ] NO real-time requestAnimationFrame loop
 - [ ] NO framer-motion or Remotion
+
+**Key:** Use `window.renderFrame = (frameNumber) => { ... }` instead of RAF!
 
 ---
 

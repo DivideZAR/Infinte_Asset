@@ -20,14 +20,18 @@ npm run format           # Run Prettier
 
 # Testing
 npm test                 # Run all tests (Jest, ESM mode, tests/ root)
-npm test -- path/to/test.test.js  # Run single test file
+npm test -- path/to/test.test.js  # Run single test file (Recommended)
 npm test:watch           # Watch mode for TDD
 npm test:coverage        # Generate coverage report
 
 # Animation Conversion
 npm run convert -- input-dir output.mp4        # Convert animation
-npm run convert:pipeline -- input-dir output   # Full pipeline
+npm run convert:pipeline -- input-dir output  # Full pipeline
 npm run validate -- path/to/animation          # Validate animation
+npm run convert:test                           # Run pipeline test suite
+npm run convert:test1                          # Run pipeline stage 1 test
+npm run convert:test2                          # Run pipeline stage 2 test
+npm run convert:test3                          # Run pipeline stage 3 test
 ```
 
 ## Technology Stack
@@ -44,14 +48,13 @@ npm run validate -- path/to/animation          # Validate animation
 
 ```
 /
-├── animations/          # React animation components (index.jsx/tsx)
-├── scripts/             # Build & conversion scripts
-│   └── stages/          # Pipeline stages (html-generator, browser-renderer, video-encoder)
-├── tests/               # Jest tests (fixtures/, *.test.js)
-├── vendor/              # Bundled libraries (React, ReactDOM, Three.js)
-├── output/              # Generated MP4 files
-├── temp/                # Temporary build files
-└── src/                 # Main entry point
+├── animations/     # React animation components
+├── scripts/       # Build & conversion scripts
+├── tests/         # Jest tests (fixtures/, *.test.js)
+├── vendor/        # Bundled libraries (React, ReactDOM, Three.js)
+├── output/        # Generated MP4 files
+├── temp/          # Temporary build files
+└── src/           # Main entry point
 ```
 
 ## Code Style Guidelines
@@ -78,7 +81,7 @@ npm run validate -- path/to/animation          # Validate animation
 
 ### Types (TypeScript)
 
-- Strict mode: `noImplicitAny`, `noImplicitReturns`, `noUnusedLocals`
+- Strict mode enabled in `tsconfig.json`: `noImplicitAny`, `noImplicitReturns`, `noUnusedLocals`
 - Use interfaces for object shapes, type aliases for unions
 - Export types used by other modules
 - Avoid `any` - use `unknown` for truly unknown types
@@ -94,25 +97,14 @@ npm run validate -- path/to/animation          # Validate animation
 ### Error Handling
 
 - Always use async/await with try-catch for async operations
-- Create custom error classes extending Error
-- Provide context in error messages
+- Create custom error classes extending Error with context
 - Validate inputs before processing
 - Example:
-
   ```javascript
   class ConversionError extends Error {
     constructor(message, public cause) {
       super(message)
       this.name = 'ConversionError'
-    }
-  }
-
-  async function convertAnimation(source) {
-    try {
-      validateSource(source)
-      return await performConversion(source)
-    } catch (error) {
-      throw new ConversionError('Failed to convert animation', error)
     }
   }
   ```
@@ -138,18 +130,17 @@ npm run validate -- path/to/animation          # Validate animation
 - `@typescript-eslint/no-explicit-any`: warn
 - `@typescript-eslint/no-unused-vars`: error (ignore `^_` prefix)
 - `react/react-in-jsx-scope`: off
-- `import/order`: error (builtin, external, internal, parent, sibling, index, alphabetical)
+- `import/order`: error (builtin, external, internal, parent, sibling, index)
 - `import/no-unresolved`: error
+- `react-hooks/rules-of-hooks`: error
 
 ## Best Practices
 
 - Always handle cleanup (temp files, browser instances) in finally blocks
-- Provide progress feedback for long-running operations
 - Validate animation code before conversion (syntax, dependencies)
 - Use absolute paths when working with file system
 - Check for required tools (FFmpeg, Playwright) at startup
 - Use JSDoc comments for public API functions
-- Avoid deeply nested code (max 3-4 levels)
 
 ## Security
 

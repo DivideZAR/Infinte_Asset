@@ -196,14 +196,45 @@ function transformCode(code: string): {
     },
   })
 
-  // Fallback for component name
+  // Fallback for component name - improved detection
   if (!mainComponentName) {
-    const match = code.match(/function\s+([A-Z]\w+)/) || code.match(/const\s+([A-Z]\w+)\s*=\s*\(/)
-    if (match) {
-      mainComponentName = match[1]
-    } else {
-      mainComponentName = 'App'
+    // Try various patterns to find component name
+    const patterns = [
+      // export default function Name()
+      /export\s+default\s+function\s+([A-Z]\w+)/,
+      // export function Name()
+      /export\s+function\s+([A-Z]\w+)/,
+      // export default Name (identifier)
+      /export\s+default\s+([A-Z]\w+)/,
+      // const Name = () => or const Name = function()
+      /const\s+([A-Z]\w+)\s*=\s*(?:\(|function)/,
+      // class Name extends
+      /class\s+([A-Z]\w+)\s+extends/,
+      // function Name() - standalone function declaration
+      /function\s+([A-Z]\w+)\s*\(/,
+    ]
+
+    for (const pattern of patterns) {
+      const match = code.match(pattern)
+      if (match) {
+        mainComponentName = match[1]
+        break
+      }
     }
+
+    // Last resort: look for any PascalCase function
+    if (!mainComponentName) {
+      const anyFunctionMatch = code.match(/function\s+([A-Z][a-zA-Z0-9]*)\s*\(/)
+      if (anyFunctionMatch) {
+        mainComponentName = anyFunctionMatch[1]
+      }
+    }
+  }
+
+  // Final fallback
+  if (!mainComponentName) {
+    console.warn('Could not detect component name, using default "App"')
+    mainComponentName = 'App'
   }
 
   return { transformedCode: transpiled.outputText, mainComponentName }
@@ -239,9 +270,28 @@ async function generateHtml(
   const animationFiles = await collectAnimationFiles(animationDir)
   let combinedCode = ''
 
+  // Track files that contain ReactDOM.createRoot (entry points)
+  // Only keep ONE entry point to avoid duplicate 'root' declarations
+  let foundEntryPoint = false
+
   for (const file of animationFiles) {
     const content = await fs.readFile(file, 'utf-8')
     const relativePath = path.relative(animationDir, file)
+
+    // Check if this file is an entry point (contains ReactDOM.createRoot)
+    const isEntryPoint = content.includes('ReactDOM.createRoot')
+
+    if (isEntryPoint) {
+      // If we already found an entry point, skip this one
+      if (foundEntryPoint) {
+        console.log(`Skipping duplicate entry point: ${relativePath}`)
+        continue
+      }
+
+      // Found our entry point
+      foundEntryPoint = true
+      console.log(`Using entry point: ${relativePath}`)
+    }
 
     // Check if this is a re-export file (export { default } from './something')
     const exportMatch = content.match(/export\s*\{\s*default\s*\}\s*from\s*['"]([^'"]+)['"]/)
@@ -372,9 +422,14 @@ async function generateHtml(
   })();
   `
 
-  const finalCode =
-    transformedCode +
-    `\n\n${viewportAndFrameScript}\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that animation is ready\nwindow.animationReady = true;`
+  // Check if the original code already has a ReactDOM.createRoot call
+  const hasExistingRoot = combinedCode.includes('ReactDOM.createRoot')
+
+  const renderCall = hasExistingRoot
+    ? ``
+    : `\n\n${viewportAndFrameScript}\n\n// Auto-generated render call\nconst root = ReactDOM.createRoot(document.getElementById('root'));\nroot.render(React.createElement(${mainComponentName}));\n\n// Signal that animation is ready\nwindow.animationReady = true;`
+
+  const finalCode = transformedCode + renderCall
 
   let htmlContent = HTML_TEMPLATE.replace('{ANIMATION_CODE}', finalCode)
   htmlContent = htmlContent.replace('@@REACT_SOURCE@@', reactSource)

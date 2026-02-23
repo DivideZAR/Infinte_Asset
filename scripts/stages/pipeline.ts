@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { generateHtml, validateAnimationForHtml } from './html-generator'
 import { captureFrames, validateBrowser } from './browser-renderer'
 import { encodeFrames } from './video-encoder'
+import { extractAnimationMetadata, formatMetadataForDisplay } from '../utils/animation-metadata'
 
 interface FullPipelineConfig {
   width: number
@@ -75,11 +76,22 @@ async function convertAnimation(
   outputPath: string,
   config?: Partial<FullPipelineConfig>,
 ): Promise<PipelineResult> {
-  const fullConfig = { ...DEFAULT_PIPELINE_CONFIG, ...config }
-
   console.log('='.repeat(50))
   console.log('React Animation to MP4 Pipeline')
   console.log('='.repeat(50))
+
+  const detectedMetadata = await extractAnimationMetadata(animationDir)
+  console.log(formatMetadataForDisplay(detectedMetadata))
+
+  const autoConfig = {
+    width: detectedMetadata.width,
+    height: detectedMetadata.height,
+    fps: detectedMetadata.fps,
+    duration: detectedMetadata.duration,
+  }
+
+  const fullConfig = { ...DEFAULT_PIPELINE_CONFIG, ...autoConfig, ...config }
+
   console.log(`Input: ${animationDir}`)
   console.log(`Output: ${outputPath}`)
   console.log(`Resolution: ${fullConfig.width}x${fullConfig.height}`)
